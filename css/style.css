@@ -74,3 +74,7 @@ width: 25px;
 padding-top: 25px;
 padding-left:50px;
 }
+
+.hasData {
+background-color: #8a8a8a;
+}

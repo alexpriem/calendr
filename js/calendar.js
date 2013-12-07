@@ -1,4 +1,10 @@
 
+meta=[{label:'d0',min:0,max:0},
+	{label:'d1',min:0,max:0},
+	{label:'d2',min:0,max:0},
+	{label:'d3',min:0,max:0}];
+
+
 
 Date.prototype.getWeek = function(){
     // We have to compare against the first monday of the year not the 01/01
@@ -34,6 +40,72 @@ Date.prototype.getWeek = function(){
 var monthNames = [ "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" ];
 
+
+function prep_data (data, dateformat) {
+
+	var newdata=[]
+	for (i=0; i<data.length; i++){
+
+		row=data[i];
+		d=row[1];
+		year=parseInt(d/10000.0);
+		month=parseInt((d-year*10000)/100);
+		day=parseInt(d-year*10000-month*100);		
+		row[1]= new Date(year,month-1,day); 
+
+		newdata.push(row);
+	}
+ return newdata;
+}
+
+function prep_daydata (data, dateformat) {
+
+	var prevDate=new Date();
+	var days=[];
+	var hour=[];
+	var d0=[]; var d1=[]; var d2=[]; var d3=[];  // temp solution until record-structure is in place
+	var nrdatasets=3;
+
+		var prevDay=0;
+	var prevMonth=0;
+	var prevYear=0;
+    for (i=0; i<data.length; i++) {
+    	row=data[i];
+    	d=row[1];
+		var day = d.getDate();    	
+    	var month = d.getMonth();
+		var year = d.getFullYear();
+    	if ((day!=prevDay) || (month!=prevMonth) || (year!=prevYear)) {    	
+    		if (day!=0) {
+    			days.push([prevDate,hour,d0,d1,d2,d3]);  // temp solution until record-structure is in place
+    		}
+    		
+    		prevDate=d;
+    		prevDay=day;
+    		prevMonth=month;
+    		prevYear=year;
+			hour=[];
+    		d0=[]; d1=[]; d2=[]; d3=[];      		
+    	}    	
+    	row3=row[3];
+    	row4=row[4];
+    	row5=row[5];
+    	row6=row[6];
+    	hour.push(row[2]);
+    	d0.push(row3);
+    	d1.push(row4);
+    	d2.push(row5);
+    	d3.push(row6);
+    	for (j=0; j<nrdatasets; j++) {
+    		val=row[j+3];
+    		if (val<meta[j].min) meta[j].min=val;    		
+    		if (val>meta[j].max) meta[j].max=val;
+    	}
+    	
+    }
+    days.push([prevDate,hour,d0,d1,d2,d3]);
+    return days;
+}
 
 
 function draw_cal(t0,t1) {
@@ -104,12 +176,38 @@ function draw_cal(t0,t1) {
 }
 
 
+function draw_days_in_calendar (daydata) {
+
+	for (i=0; i<daydata.length; i++) {
+		d=daydata[i][0];
+		var day = d.getDate();
+		var month = d.getMonth();		
+		var year = d.getFullYear();
+		$('#d_'+day+'_'+month).addClass("hasData");
+	}
+}
+
+
+function draw_calendar_plot (daydata) {
+
+
+	chart = d3.select("#heatmap_svg");
+
+	var line = d3.svg.line();
+
+}
 
 function init_page () {
 
 	var from=new Date('2013-01-05');
 	var to=new Date('2013-12-31');
-	draw_cal (from, to);	
+
+	newdata=prep_data(data);
+	daydata=prep_daydata(newdata);
+	//console.log ('daydata',daydata);
+	draw_cal (from, to);
+	draw_days_in_calendar (daydata);
+	draw_calendar_plot(daydata);
 }
 
 

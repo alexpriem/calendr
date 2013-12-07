@@ -5,6 +5,9 @@ meta=[{label:'d0',min:0,max:0},
 	{label:'d3',min:0,max:0}];
 
 
+width=500;
+height=500;
+
 
 Date.prototype.getWeek = function(){
     // We have to compare against the first monday of the year not the 01/01
@@ -78,7 +81,7 @@ function prep_daydata (data, dateformat) {
     	if ((day!=prevDay) || (month!=prevMonth) || (year!=prevYear)) {    	
     		if (day!=0) {
     			days.push([prevDate,hour,d0,d1,d2,d3]);  // temp solution until record-structure is in place
-    		}
+    		}											// also ensure data is contiguous / zero filled.
     		
     		prevDate=d;
     		prevDay=day;
@@ -190,10 +193,106 @@ function draw_days_in_calendar (daydata) {
 
 function draw_calendar_plot (daydata) {
 
+	var canvas= d3.select ('#calplot').append('svg')
+	.attr('width', width)
+	.attr('height', height);
 
-	chart = d3.select("#heatmap_svg");
 
+	var xScale=d3.scale.linear();
+    xScale.domain([0,23]);
+	xScale.range([50,width]); 
+
+	var yScale=d3.scale.linear();
+    yScale.domain([meta[0].min, meta[0].max]);
+	yScale.range([50,height-50]); 
 	var line = d3.svg.line();
+
+
+	var xAxis=d3.svg.axis();
+    xAxis.scale(xScale)
+    	.orient("bottom");
+
+	var yAxis=d3.svg.axis();
+    yAxis.scale(yScale)
+    	.orient("left")   
+    	.tickFormat(function(d) {
+    			if ((d/1000)>=1) { d=d/1000+"k"; }
+    			return d;
+			});
+
+
+	var xGrid=d3.svg.axis();
+    xGrid.scale(xScale)
+    	.orient("bottom")
+    	.tickSize(-0.7*height,0,0)
+    	.tickFormat(function(d) {
+    			return "";
+
+			});
+    		
+ 	var yGrid=d3.svg.axis();
+    yGrid.scale(yScale)
+    	.orient("left")
+    	.tickSize(-width,0,0)
+    	.tickFormat(function(d) {
+    			return "";
+
+			});
+
+/* place axis & grids */
+
+   canvas.append("g")
+    		.attr("class","grid")
+    		.attr("transform","translate(0,"+(height-50)+")")
+    		.call(xGrid);
+   canvas.append("g")
+    		.attr("class","grid")
+    		.attr("transform","translate(50,0)")
+			.call(yGrid);
+
+   canvas.append("g")
+    		.attr("class","xaxis")
+    		.attr("transform","translate(0,"+(height-50)+")")
+    		.call(xAxis);
+   canvas.append("g")
+    		.attr("class","yaxis")
+    		.attr("transform","translate(50,0)")
+    		.call(yAxis);
+
+/* xas / yas labels */
+    canvas.append("text")
+    	.attr("class", "label")
+    	.attr("y", height-10)
+    	.attr("x", width/2)
+    	.text("tijd (uur)");
+
+    canvas.append("text")
+    	.attr("class", "label")
+    	.attr("y", height/2)
+    	.attr("x", 10)
+    	.text(meta[0].label);
+
+	
+
+
+
+var line=d3.svg.line()
+	.x(function(d,i)  { return xScale(i); })
+	.y(function(d,i)  {  /*console.log(d,i, yScale(d));*/ return yScale(d); }); //0.5*height-0.5*height*d/(1.0*maxy); });
+
+
+	for (i=1; i<daydata.length; i++) {
+		xdata=daydata[i][1];  //uren 
+		ydata=daydata[i][2];  //data
+			
+    
+	canvas.append("svg:path")
+		.attr("d", line(ydata))
+		.style("stroke","blue")
+		.style("fill","none")
+		.style("stroke-width","2")
+		.style("opacity","0.2");
+	}
 
 }
 

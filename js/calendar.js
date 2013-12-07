@@ -35,26 +35,25 @@ var monthNames = [ "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" ];
 
 
-function init_page() {
 
-$('#calendar').html('init');
+function draw_cal(t0,t1) {
 
-
-	t0=new Date('2013-01-05');
-	t1=new Date('2013-07-01');
+	$('#calendar').html('init');
 
 	console.log(t0);
 	console.log(t0.getWeek());
 
+	var year=t0.getFullYear();
 	var out='<table>\n';
+	out+='<tr><th></th><td class="hspacer"> </td> <th id="yearlbl">'+year+'</th><td class="hspacer"> </td> <th></th>';
 	out+='<tr>\n';
 	monthNr=0;
 
 	while (t0<t1) {
 
-		out+='<td valign="top"><table>\n';
+		out+='<td valign="top"><table id="calendartbl">\n';
 
-		out+='<tr><th colspan="7">' +monthNames[t0.getMonth()]+' </th></tr>\n';
+		out+='<tr><th colspan="7" class="monthheader">' +monthNames[t0.getMonth()]+' </th></tr>\n';
 		out+='<tr>';
 		j=0;
 		daynr=t0.getDay();
@@ -70,7 +69,7 @@ $('#calendar').html('init');
 			daynr=t0.getDay();
 			dayclass="weekday";
 			if ((daynr==5) || (daynr==6)) dayclass="weekend";		
-			out+='<td class="'+dayclass+'">'+day+'</td>';			
+			out+='<td id="d_'+day+'_'+thisMonth+'" class="day '+dayclass+'">'+day+'</td>';			
 			if (daynr==6) {
 				out+='</tr>\n<tr>'
 			}
@@ -82,11 +81,11 @@ $('#calendar').html('init');
 		while(daynr<5) {
 			out+='<td class="endspace"></td>';
 			daynr++;	
-		}
+		}		
 		out+='</tr></table>';
 		monthNr++;
 		if (monthNr<3)
-			out+='</td><td class="spacer"> </td>';
+			out+='</td><td class="hspacer"> </td>';
 		if (monthNr==3) {
 			out+='</td></tr>\n';
 			out+='<tr>\n';
@@ -95,25 +94,23 @@ $('#calendar').html('init');
 		
 	}
 	while(monthNr<3){
-		out+="<td></td>";
+		out+='<td class="hspacer"></td>';
 		monthNr++;
 	}
 
 	out+='</tr>\n</table>\n';
 	$('#calendar').html(out)
 	console.log(t0);
-
-	console.log (dust);
-	var compiled = dust.compile("Hello {name}!", "index");
-	dust.loadSource(compiled);
- 
-	dust.render("index", {name: "David"}, function(err, out) {
-		if(err != null)
-			alert("Error loading page");
-			//assume we have jquery
-	//	$("#calendar").html(out);
-		});
-
 }
+
+
+
+function init_page () {
+
+	var from=new Date('2013-01-05');
+	var to=new Date('2013-12-31');
+	draw_cal (from, to);	
+}
+
 
 $( document ).ready(init_page);

@@ -47,3 +47,30 @@ table {
 	border-spacing: 0;
 }
 
+td,th {
+font-family: Verdana, Geneva, sans-serif;
+font-size:13px;
+}
+th {
+font-weight: bold;	
+}
+
+.day {
+text-align:right;
+padding-left:3px;
+}
+
+.monthheader {
+width: 125px;
+padding-top:15px;
+padding-bottom:10px;
+}
+
+.hspacer {
+width: 25px;
+}
+
+#calendar {
+padding-top: 25px;
+padding-left:50px;
+}

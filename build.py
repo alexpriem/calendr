@@ -1,6 +1,5 @@
-import pyodbc,sys
+import sys
 import argparse
-from jinja2 import Environment, Template
 
 
 class calendar:

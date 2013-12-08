@@ -69,11 +69,12 @@ function prep_daydata (data, dateformat) {
 	var d0=[]; var d1=[]; var d2=[]; var d3=[];  // temp solution until record-structure is in place
 	var nrdatasets=3;
 
-		var prevDay=0;
+	var prevDay=0;
 	var prevMonth=0;
 	var prevYear=0;
     for (i=0; i<data.length; i++) {
     	row=data[i];
+    	if (row[0]!=selected_keyval) continue;
     	d=row[1];
 		var day = d.getDate();    	
     	var month = d.getMonth();

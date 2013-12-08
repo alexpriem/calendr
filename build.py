@@ -11,7 +11,8 @@ class calendar:
         pass
     
     def build_data(self,args):
-        lines=open("data/orig/knmi_hvh_2009.txt","r").readlines()
+
+        
 
         recordinfo=args['recordinfo']
         if recordinfo is None:
@@ -48,12 +49,11 @@ class calendar:
             js+='"keyid",'
         js+='"date","hour",'
         js+='"'+'","'.join(datacolnames)
-        js+='"];\n'
+        js+='"];\n\n'
         
-        
-            
-        
-
+        csv=args['csv']
+        lines=open(csv,"r").readlines()
+                
         firstline=True
         js+='var data=[\n'
         for line in lines:
@@ -71,7 +71,25 @@ class calendar:
             js+='],\n'
             
             
-        js=js[:-2]+'];\n';
+        js=js[:-2]+'];\n\n';
+
+        
+        keyfile=args['keyfile']
+        if keyfile is not None:
+            f=open(keyfile,'r')
+            id2keyjs='id2key={'
+            key2idjs='key2id={'
+            for line in f.readlines():
+                line=line.split(',')
+                id2keyjs+='"'+line[0]+'":"'+line[1].strip()+'",\n'
+                key2idjs+='"'+line[1].strip()+'":'+line[0]+',\n'
+            id2keyjs=id2keyjs[:-2]+'};\n\n'
+            key2idjs=key2idjs[:-2]+'};\n\n'
+            js+=key2idjs;
+            js+=id2keyjs;
+                
+            
+        
         g=open("js/data.js","w");
         g.write(js)
         g.close()
@@ -94,6 +112,7 @@ parser = argparse.ArgumentParser(description='generate calendar from repeating d
 parser.add_argument('-c', '--csv', dest='csv',  help='csv input file name', required=True)
 parser.add_argument('-html', dest='htmlfile',  help='name of html outputfile', required=False, default=True, action='store_true')
 parser.add_argument('-record', dest='recordinfo',  help='record description: key,keyid,date,hour,datalabel,dummy', required=True)
+parser.add_argument('-keyfile', dest='keyfile',  help='for mapping keyids to keylabels', required=False)
 
 args=vars(parser.parse_args())
 

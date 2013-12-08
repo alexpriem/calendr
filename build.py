@@ -79,15 +79,26 @@ class calendar:
             f=open(keyfile,'r')
             id2keyjs='id2key={'
             key2idjs='key2id={'
+            keylabeljs='keylabel=['
             for line in f.readlines():
                 line=line.split(',')
-                id2keyjs+='"'+line[0]+'":"'+line[1].strip()+'",\n'
-                key2idjs+='"'+line[1].strip()+'":'+line[0]+',\n'
+                keylabel=line[1].strip()
+                keyid=line[0].strip()
+                id2keyjs+='"'+keyid+'":"'+keylabel+'",\n'
+                key2idjs+='"'+keylabel+'":'+keyid+',\n'
+                keylabeljs+='"'+keylabel+'",\n'
             id2keyjs=id2keyjs[:-2]+'};\n\n'
             key2idjs=key2idjs[:-2]+'};\n\n'
+            keylabeljs=keylabeljs[:-2]+'];\n\n'
             js+=key2idjs;
             js+=id2keyjs;
-                
+            js+=keylabeljs;
+
+            f.seek(0)
+            line=f.readline().strip().split(',')
+            js+='selected_keylabel=keylabel[0];\n'
+            js+='selected_keyid=key2id[selected_keylabel];\n'
+            
             
         
         g=open("js/data.js","w");

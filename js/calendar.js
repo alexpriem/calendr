@@ -195,6 +195,7 @@ function draw_days_in_calendar (daydata) {
 function draw_calendar_plot (daydata) {
 
 	var canvas= d3.select ('#calplot').append('svg')
+	.attr('id','cal_svg')
 	.attr('width', width)
 	.attr('height', height);
 
@@ -297,12 +298,24 @@ var line=d3.svg.line()
 
 }
 
+function update_selectie () {
+	console.log ('selectie=',$(this).val());
+	selected_keylabel=$(this).val()
+	selected_keyid=key2id[selected_keylabel];
+	console.log ('selectie=',selected_keyid);
+	$('#cal_svg').remove();
+	daydata=prep_daydata(newdata);
+	draw_days_in_calendar (daydata);
+	draw_calendar_plot(daydata);
+}
+
 function init_page () {
 
 	var from=new Date('2013-01-05');
 	var to=new Date('2013-12-31');
 
 	$('#keyentry').typeahead({source:keylabel});
+	$('#keyentry').on('change',update_selectie);
 
 	newdata=prep_data(data);
 	daydata=prep_daydata(newdata);

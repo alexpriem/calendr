@@ -74,7 +74,7 @@ function prep_daydata (data, dateformat) {
 	var prevYear=0;
     for (i=0; i<data.length; i++) {
     	row=data[i];
-    	if (row[0]!=selected_keyval) continue;
+    	if (row[0]!=selected_keyid) continue;
     	d=row[1];
 		var day = d.getDate();    	
     	var month = d.getMonth();
@@ -301,6 +301,8 @@ function init_page () {
 
 	var from=new Date('2013-01-05');
 	var to=new Date('2013-12-31');
+
+	$('#keyentry').typeahead({source:keylabel});
 
 	newdata=prep_data(data);
 	daydata=prep_daydata(newdata);

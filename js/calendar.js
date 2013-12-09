@@ -7,6 +7,8 @@ meta=[{label:'d0',min:0,max:0},
 
 width=500;
 height=500;
+var from=new Date('2009-01-05');
+var to=new Date('2009-12-31');
 
 
 Date.prototype.getWeek = function(){
@@ -63,6 +65,7 @@ function prep_data (data, dateformat) {
 
 function prep_daydata (data, dateformat) {
 
+	console.log('prep_daydata', from,to);
 	var prevDate=new Date();
 	var days=[];
 	var hour=[];
@@ -73,9 +76,12 @@ function prep_daydata (data, dateformat) {
 	var prevMonth=0;
 	var prevYear=0;
     for (i=0; i<data.length; i++) {
-    	row=data[i];
+    	row=data[i];    	
     	if (row[0]!=selected_keyid) continue;
     	d=row[1];
+    	if (d<from) continue;
+    	if (d>to)  continue;
+
 		var day = d.getDate();    	
     	var month = d.getMonth();
 		var year = d.getFullYear();
@@ -112,7 +118,13 @@ function prep_daydata (data, dateformat) {
 }
 
 
-function draw_cal(t0,t1) {
+function draw_cal(from,to) {
+
+
+	t0=new Date(from.getFullYear(),from.getMonth(), from.getDate());
+	console.log(from.getFullYear(),from.getMonth(), from.getDate());		
+	t1=new Date(to.getFullYear(),to.getMonth(), to.getDate());
+	console.log('drawcal:',t0,t1)
 
 	$('#calendar').html('init');
 
@@ -129,7 +141,7 @@ function draw_cal(t0,t1) {
 
 		out+='<td valign="top"><table id="calendartbl">\n';
 
-		out+='<tr><th colspan="7" class="monthheader">' +monthNames[t0.getMonth()]+' </th></tr>\n';
+		out+='<tr><th colspan="7" class="monthheader" id="m_'+t0.getMonth()+'">' +monthNames[t0.getMonth()]+' </th></tr>\n';
 		out+='<tr>';
 		j=0;
 		daynr=t0.getDay();
@@ -182,14 +194,19 @@ function draw_cal(t0,t1) {
 
 function draw_days_in_calendar (daydata) {
 
-	for (i=0; i<daydata.length; i++) {
-		d=daydata[i][0];
+	console.log('drawdays:',from,to);
+	d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
+	j=0;
+	while (d<to) {			
 		var day = d.getDate();
 		var month = d.getMonth();		
 		var year = d.getFullYear();
-		$('#d_'+day+'_'+month).addClass("hasData");
+		$('#d_'+day+'_'+month).addClass("hasData");		
+		d.setDate(day+1);
+		//console.log(day,month,year)
 	}
 }
+
 
 
 function draw_calendar_plot (daydata) {
@@ -289,11 +306,14 @@ var line=d3.svg.line()
 			
     
 	canvas.append("svg:path")
+		.attr("id","l_"+day+"_"+month)
+		.attr("class","dayl")
 		.attr("d", line(ydata))
 		.style("stroke","blue")
 		.style("fill","none")
 		.style("stroke-width","2")
 		.style("opacity","0.2");
+	//	$('#l_'+day+'_'+month).click(update_calday);
 	}
 
 }
@@ -303,27 +323,88 @@ function update_selectie () {
 	selected_keylabel=$(this).val()
 	selected_keyid=key2id[selected_keylabel];
 	console.log ('selectie=',selected_keyid);
-	$('#cal_svg').remove();
-	daydata=prep_daydata(newdata);
+
 	draw_days_in_calendar (daydata);
+	$('#cal_svg').remove();
+	daydata=prep_daydata(newdata);	
 	draw_calendar_plot(daydata);
 }
 
+
+function update_month () {
+
+ console.log (this.id);
+ m=this.id.split('_');	
+ month=parseInt(m[1]);
+ from=new Date(year,month,1); 
+ to=new Date(year,month+1,1); 
+ console.log(from,to);
+
+ $('.day').removeClass('hasData');
+ draw_days_in_calendar (daydata);
+
+ $('#cal_svg').remove();
+ daydata=prep_daydata(newdata);	
+ draw_calendar_plot(daydata);
+}
+
+function update_plot () {
+
+ console.log (this.id);
+ dm=this.id.split('_');
+ month=parseInt(dm[2]);
+ day=parseInt(dm[1]);
+ year=parseInt($('#yearlbl').html());
+ console.log(year,month,day)
+
+ newDate=new Date(year,month,day);
+ console.log('newdate:',newDate);
+ console.log('from,to:',from,to);
+ if (newDate<from) from=newDate; 
+ else to=newDate;
+ console.log('from,to:',from,to);
+
+ $('.day').removeClass('hasData');
+ draw_days_in_calendar (daydata);
+
+ $('#cal_svg').remove();
+ daydata=prep_daydata(newdata);	
+ draw_calendar_plot(daydata);
+}
+
+function update_calday () {
+
+ console.log('update_calday:',this.id);
+ dm=this.id.split('_');
+ month=parseInt(dm[2])-1;
+ day=parseInt(dm[1]);
+ selday='#d_'+day+'_'+month;
+ console.log(selday);
+ $(selday).addClass('daysel');
+ }
+
+
 function init_page () {
 
-	var from=new Date('2013-01-05');
-	var to=new Date('2013-12-31');
 
 	$('#keyentry').typeahead({source:keylabel});
 	$('#keyentry').on('change',update_selectie);
 
 	newdata=prep_data(data);
 	daydata=prep_daydata(newdata);
-	//console.log ('daydata',daydata);
+	console.log('upd:',from,to);
 	draw_cal (from, to);
+	console.log('upd2:',from,to);
+
 	draw_days_in_calendar (daydata);
 	draw_calendar_plot(daydata);
+
+	$('.day').on('click',update_plot);
+	$('.monthheader').on('click',update_month);
+//	$('.dayl').on('click',update_calday);
+	$('.dayl').click(update_calday);     // click on open path/fill none does not work?
 }
 
 
 $( document ).ready(init_page);
+

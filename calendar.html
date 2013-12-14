@@ -12,10 +12,24 @@
 
 
 <body>
-<input type="text" id="keyentry"> </input>
+
 
 <table>
- <tr><td id="calendar"> </td> <td id="calplot"></td> </tr>
+ <tr>
+ 	<td id="calendar"> </td>
+  	<td id="calplot">  </td> 
+ 	<td id="controls"> 
+ 		<label for="keyentry"> Selectie:</label><input type="text" id="keyentry"> </input>
+
+ 		<ul id="repsel_list">
+ 		<li><a href="#" id="dag1" class="repsel"> dag </a></li>
+ 		<li><a href="#" id="week" class="repsel"> week </a></li>
+ 		<li><a href="#" id="maand" class="repsel"> maand </a></li>
+ 		<li><a href="#" id="kwartaal" class="repsel"> kwartaal </a></li>
+ 		</ul>
+ 		<ul id="datasel_list">
+ 		</ul>
+	</td> </tr>
 </table>
 
 <script src="js/calendar.js"> </script>

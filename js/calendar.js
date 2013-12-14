@@ -1,10 +1,8 @@
 
-meta=[{label:'d0',min:0,max:0},
-	{label:'d1',min:0,max:0},
-	{label:'d2',min:0,max:0},
-	{label:'d3',min:0,max:0}];
+meta=[{label:'d0',min:0,max:0}];
+varname=labels[3];
 
-
+nrdatasets=labels.length-3;
 width=500;
 height=500;
 var from=new Date('2009-01-05');
@@ -68,13 +66,16 @@ function prep_daydata (data, dateformat) {
 	console.log('prep_daydata', from,to);
 	var prevDate=new Date();
 	var days=[];
-	var hour=[];
-	var d0=[]; var d1=[]; var d2=[]; var d3=[];  // temp solution until record-structure is in place
-	var nrdatasets=3;
+	var hour=[];	
 
 	var prevDay=0;
 	var prevMonth=0;
 	var prevYear=0;
+	datarow=[];
+	for (i=0; i<nrdatasets; i++){		
+		meta[i]={min:data[0][i+3],max:data[0][i+3]};		
+		datarow[i]=[];    	
+	}
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
     	if (row[0]!=selected_keyid) continue;
@@ -86,34 +87,50 @@ function prep_daydata (data, dateformat) {
     	var month = d.getMonth();
 		var year = d.getFullYear();
     	if ((day!=prevDay) || (month!=prevMonth) || (year!=prevYear)) {    	
-    		if (day!=0) {
-    			days.push([prevDate,hour,d0,d1,d2,d3]);  // temp solution until record-structure is in place
-    		}											// also ensure data is contiguous / zero filled.
+    		if (day!=0) {    	
+    			dayrow=[]		
+    			dayrow.push(prevDate)
+    			dayrow.push(hour);
+    			for (j=0; j<nrdatasets; j++) {
+    				dayrow.push(datarow[j]);
+    			}
+    			days.push(dayrow);
+    		}											
     		
     		prevDate=d;
     		prevDay=day;
     		prevMonth=month;
     		prevYear=year;
 			hour=[];
-    		d0=[]; d1=[]; d2=[]; d3=[];      		
+			for (j=0; j<nrdatasets; j++){
+				datarow[j]=[];
+    		}
     	}    	
-    	row3=row[3];
-    	row4=row[4];
-    	row5=row[5];
-    	row6=row[6];
-    	hour.push(row[2]);
-    	d0.push(row3);
-    	d1.push(row4);
-    	d2.push(row5);
-    	d3.push(row6);
+    	for (j=0; j<nrdatasets; j++){
+    		datarow[j].push(row[j+3]);
+    	}
+    	
+    	hour.push(row[2]);    	
     	for (j=0; j<nrdatasets; j++) {
     		val=row[j+3];
-    		if (val<meta[j].min) meta[j].min=val;    		
+    		if (val<meta[j].min) meta[j].min=val;  
     		if (val>meta[j].max) meta[j].max=val;
     	}
     	
     }
-    days.push([prevDate,hour,d0,d1,d2,d3]);
+	dayrow=[]		
+	dayrow.push(prevDate)
+	dayrow.push(hour);
+	for (j=0; j<nrdatasets; j++) {
+		dayrow.push(datarow[j]);
+	}
+	days.push(dayrow);
+
+	console.log('dag0:',days[0]);
+	console.log('dag1:',days[1]);
+	console.log('dag1:',days[2]);
+	
+	console.log(meta);
     return days;
 }
 
@@ -212,17 +229,19 @@ function draw_days_in_calendar (daydata) {
 function draw_calendar_plot (daydata) {
 
 	var canvas= d3.select ('#calplot').append('svg')
+	.attr('xmlns',"http://www.w3.org/2000/svg")
 	.attr('id','cal_svg')
 	.attr('width', width)
 	.attr('height', height);
 
-
+	varindex=labels.indexOf(varname)-3;
 	var xScale=d3.scale.linear();
     xScale.domain([0,23]);
 	xScale.range([50,width]); 
 
+	console.log('minmax:',varname, varindex, meta[varindex]);
 	var yScale=d3.scale.linear();
-    yScale.domain([meta[0].min, meta[0].max]);
+    yScale.domain([meta[varindex].min, meta[varindex].max]);
 	yScale.range([50,height-50]); 
 	var line = d3.svg.line();
 
@@ -300,10 +319,12 @@ var line=d3.svg.line()
 	.y(function(d,i)  {  /*console.log(d,i, yScale(d));*/ return yScale(d); }); //0.5*height-0.5*height*d/(1.0*maxy); });
 
 
+	console.log('daydata:',daydata[1]);
 	for (i=1; i<daydata.length; i++) {
+
 		xdata=daydata[i][1];  //uren 
-		ydata=daydata[i][2];  //data
-			
+		ydata=daydata[i][varindex+2];  //data
+
     
 	canvas.append("svg:path")
 		.attr("id","l_"+day+"_"+month)
@@ -312,8 +333,8 @@ var line=d3.svg.line()
 		.style("stroke","blue")
 		.style("fill","none")
 		.style("stroke-width","2")
-		.style("opacity","0.2");
-	//	$('#l_'+day+'_'+month).click(update_calday);
+		.style("opacity","0.2")
+		.on("click", function(d,i) { alert("Hello world:"+ this.id); });	
 	}
 
 }
@@ -384,11 +405,33 @@ function update_calday () {
  }
 
 
+function click_varname () {
+
+	varname=this.id;
+	console.log(varname);		
+	$('#cal_svg').remove();
+ 	draw_calendar_plot(daydata);
+}
+
+function update_variablenames() {
+
+	var list='';
+	for (i=3; i<labels.length; i++) {
+		varname=labels[i];			
+		console.log(varname);
+		list+='<li> <a href="#" id="'+varname+'" class="varname" >'+ varname+'</a> </li>';
+	}
+	$('#datasel_list').html(list);
+	$('.varname').on('click',click_varname);
+	varname=labels[3];
+}
+
 function init_page () {
 
 
-	$('#keyentry').typeahead({source:keylabel});
+//	$('#keyentry').typeahead({source:keylabel});
 	$('#keyentry').on('change',update_selectie);
+	update_variablenames();
 
 	newdata=prep_data(data);
 	daydata=prep_daydata(newdata);
@@ -401,8 +444,6 @@ function init_page () {
 
 	$('.day').on('click',update_plot);
 	$('.monthheader').on('click',update_month);
-//	$('.dayl').on('click',update_calday);
-	$('.dayl').click(update_calday);     // click on open path/fill none does not work?
 }
 
 

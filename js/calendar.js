@@ -9,6 +9,16 @@ var from=new Date('2009-01-05');
 var to=new Date('2009-12-31');
 
 
+datePeriod=new Date(2011,1,2)-new Date(2011,1,1);  // day
+dateBlock=60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
+datePeriod=new Date(2011,1,8)-new Date(2011,1,1); // week
+dateBlock= 3.3*60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
+// ? factor 2.5 off?
+//datePeriod=new Date(2011,1,14)-new Date(2011,1,1); // week
+//dateBlock= 12*60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
+
+
+
 Date.prototype.getWeek = function(){
     // We have to compare against the first monday of the year not the 01/01
     // 60*60*24*1000 = 86400000
@@ -68,25 +78,31 @@ function prep_daydata (data, dateformat) {
 	var days=[];
 	var hour=[];	
 
-	var prevDay=0;
-	var prevMonth=0;
-	var prevYear=0;
+	console.log('datePeriod',datePeriod);
+
 	datarow=[];
 	for (i=0; i<nrdatasets; i++){		
 		meta[i]={min:data[0][i+3],max:data[0][i+3]};		
 		datarow[i]=[];    	
 	}
+
+	prevDate=data[0][1];
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
     	if (row[0]!=selected_keyid) continue;
     	d=row[1];
+    	d.setHours(row[2]);
     	if (d<from) continue;
     	if (d>to)  continue;
 
 		var day = d.getDate();    	
     	var month = d.getMonth();
 		var year = d.getFullYear();
-    	if ((day!=prevDay) || (month!=prevMonth) || (year!=prevYear)) {    	
+
+		delta=d - prevDate;
+		//console.log(delta, datePeriod)		
+	//	console.log(d,prevDate)
+		if (delta>datePeriod) {   	
     		if (day!=0) {    	
     			dayrow=[]		
     			dayrow.push(prevDate)
@@ -98,9 +114,6 @@ function prep_daydata (data, dateformat) {
     		}											
     		
     		prevDate=d;
-    		prevDay=day;
-    		prevMonth=month;
-    		prevYear=year;
 			hour=[];
 			for (j=0; j<nrdatasets; j++){
 				datarow[j]=[];
@@ -128,7 +141,8 @@ function prep_daydata (data, dateformat) {
 
 	console.log('dag0:',days[0]);
 	console.log('dag1:',days[1]);
-	console.log('dag1:',days[2]);
+	console.log('dag2:',days[2]);
+	console.log('dag3:',days[3]);
 	
 	console.log(meta);
     return days;
@@ -235,8 +249,10 @@ function draw_calendar_plot (daydata) {
 	.attr('height', height);
 
 	varindex=labels.indexOf(varname)-3;
-	var xScale=d3.scale.linear();
-    xScale.domain([0,23]);
+	var xScale=d3.time.scale();
+
+
+    xScale.domain([0,datePeriod]);   // time in ms
 	xScale.range([50,width]); 
 
 	console.log('minmax:',varname, varindex, meta[varindex]);
@@ -313,16 +329,22 @@ function draw_calendar_plot (daydata) {
 	
 
 
+console.log('datePeriod:',datePeriod);
+console.log('dateBlock:',dateBlock);
 
 var line=d3.svg.line()
-	.x(function(d,i)  { return xScale(i); })
+	.x(function(d,i)  { return xScale(xdata[i]); })
 	.y(function(d,i)  {  /*console.log(d,i, yScale(d));*/ return yScale(d); }); //0.5*height-0.5*height*d/(1.0*maxy); });
 
+	
+	xdata=[];
+	for (i=1; i<daydata.length; i++) xdata.push((i-1) * dateBlock);  //uren 
+	
 
 	console.log('daydata:',daydata[1]);
 	for (i=1; i<daydata.length; i++) {
 
-		xdata=daydata[i][1];  //uren 
+		
 		ydata=daydata[i][varindex+2];  //data
 
     

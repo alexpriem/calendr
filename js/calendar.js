@@ -29,7 +29,7 @@ Date.prototype.getWeek = function(){
         onejan_day = (onejan.getDay()==0) ? 7 : onejan.getDay(),
         days_for_next_monday = (8-onejan_day),
         onejan_next_monday_time = onejan.getTime() + (days_for_next_monday * day_miliseconds),
-        // If one jan is not a monday, get the first monday of the year
+  	      // If one jan is not a monday, get the first monday of the year
         first_monday_year_time = (onejan_day>1) ? onejan_next_monday_time : onejan.getTime(),
         this_date = new Date(this.getFullYear(), this.getMonth(),this.getDate(),0,0,0),// This at 00:00:00
         this_time = this_date.getTime(),
@@ -53,6 +53,23 @@ Date.prototype.getWeek = function(){
 var monthNames = [ "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" ];
 
+
+
+
+function read_data (key) {
+
+	console.clear()
+	console.log("reading data:",key)
+	
+	//$('#txt').html('<script src="js/een.js"></script>');
+	//$('#txt').html('<object name="foo" type="text/html" data="js/een.js"/>');
+	$('#txt').html('<embed type="text/html" src="js/een.js">');
+	console.log($('#txt').html());
+	console.log($('#txt').text());
+//	console.log('a:',a);
+	$('#txt').html('<script src="js/twee.js"></script>');
+	console.log('a:',a);
+}
 
 function prep_data (data, dateformat) {
 
@@ -466,6 +483,8 @@ function init_page () {
 
 	$('.day').on('click',update_plot);
 	$('.monthheader').on('click',update_month);
+	$('#read').on('click',read_data);
+
 }
 
 

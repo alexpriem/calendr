@@ -1,5 +1,5 @@
-import sys
-import argparse
+import sys, json, argparse
+
 
 
 class calendar:
@@ -20,6 +20,7 @@ class calendar:
         cols=[col.strip() for col in cols]
         key=None
         c=0
+        keyindex=None
         if 'key' in cols:
             keyindex=cols.index('key')
             c+=1
@@ -28,14 +29,11 @@ class calendar:
             keyidindex=cols.index('keyid')
             c+=1
         if not('date' in cols):
-            raise  RuntimeError('date-col needed in record')
-        if not('hour' in cols):
-            raise  RuntimeError('date-col needed in record')
-        dateindex=cols.index('date')
-        hourindex=cols.index('hour')
+            raise  RuntimeError('date-col needed in record')      
+        dateindex=cols.index('date')        
         datacolnames=[];
         for col in cols:
-            if col not in ['key','keyid','date','hour','dummy']:
+            if col not in ['key','keyid','date','dummy']:
                 datacolnames.append(col)
         dataindex=[]
         for datacolname in datacolnames:
@@ -46,7 +44,7 @@ class calendar:
             js+='"key",'
         if keyidindex is not None:
             js+='"keyid",'
-        js+='"date","hour",'
+        js+='"date",'
         js+='"'+'","'.join(datacolnames)
         js+='"];\n\n'
         
@@ -55,24 +53,38 @@ class calendar:
                 
         firstline=True
         js+='var data=[\n'
+        prevkey=None
+        index_start={}
+        index_end={}
+        linenr=0
         for line in lines:
             line=line.strip();            
             if line[0]=='#':
                 continue
             datacols=line.split(',')
             datacols=[datacol.strip() for datacol in datacols]
-            js+='['
+            js+='['            
             if keyindex is not None:
-                js+=datacols[keyindex]            
-            js+=','+datacols[dateindex]
-            js+=','+datacols[hourindex]            
+                keyval=datacols[keyindex]
+            if keyidindex is not None:
+                keyval=datacols[keyidindex]
+            js+=keyval
+            if keyval!=prevkey:
+                if prevkey is not None:
+                    index_end[prevkey]=linenr
+                index_start[keyval]=linenr
+                prevkey=keyval
+                
+            js+=",Date('"+datacols[dateindex]+"')"            
             js+=','+','.join([datacols[d] for d in dataindex])
             js+='],\n'
-            
+            linenr+=1
             
         js=js[:-2]+'];\n\n';
+        index_end[keyval]=linenr;
 
-        
+
+        # dit kan in json, maar wordt een stuk onleesbaarder dan
         keyfile=args['keyfile']
         if keyfile is not None:
             f=open(keyfile,'r')
@@ -97,6 +109,12 @@ class calendar:
             line=f.readline().strip().split(',')
             js+='selected_keylabel=keylabel[0];\n'
             js+='selected_keyid=key2id[selected_keylabel];\n'
+
+
+        s=json.dumps(index_start)
+        js+='\n\n var index_start='+s+';\n';
+        s=json.dumps(index_end)
+        js+='\n\n var index_end='+s+';\n';
             
             
         
@@ -119,11 +137,13 @@ parser = argparse.ArgumentParser(description='generate calendar from repeating d
 #parser.add_argument('-u', dest='username',  help='username', required=False)
 #parser.add_argument('-p', dest='password',  help='password', required=False)
 
-parser.add_argument('-c', '--csv', dest='csv',  help='csv input file name', required=True)
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument('-c', '--csv', dest='csv',  help='csv input file name')
+group.add_argument('-jsdir', '--jsdir', dest='jsdir',  help='directory with js files')
 parser.add_argument('-html', dest='htmlfile',  help='name of html outputfile', required=False, default=True, action='store_true')
 parser.add_argument('-record', dest='recordinfo',  help='record description: key,keyid,date,hour,datalabel,dummy', required=True)
 parser.add_argument('-keyfile', dest='keyfile',  help='for mapping keyids to keylabels', required=False)
-
+parser.add_argument('-dirfile', dest='dirfile',  help='for mapping directory keys to labels', required=False)
 args=vars(parser.parse_args())
 
 

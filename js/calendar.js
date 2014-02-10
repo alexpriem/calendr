@@ -99,58 +99,47 @@ function prep_daydata (data, dateformat) {
 
 	datarow=[];
 	for (i=0; i<nrdatasets; i++){		
-		meta[i]={min:data[0][i+3],max:data[0][i+3]};		
+		meta[i]={min:data[0][i+2],max:data[0][i+2]};		
 		datarow[i]=[];    	
 	}
 
-	prevDate=data[0][1];
+	prevDate=data[0][0];
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
     	if (row[0]!=selected_keyid) continue;
-    	d=row[1];
-    	d.setHours(row[2]);
+    	d=row[0];    	
     	if (d<from) continue;
     	if (d>to)  continue;
 
-		var day = d.getDate();    	
-    	var month = d.getMonth();
-		var year = d.getFullYear();
-
 		delta=d - prevDate;
-		//console.log(delta, datePeriod)		
-	//	console.log(d,prevDate)
 		if (delta>datePeriod) {   	
     		if (day!=0) {    	
     			dayrow=[]		
-    			dayrow.push(prevDate)
-    			dayrow.push(hour);
+    			dayrow.push(prevDate)    			
     			for (j=0; j<nrdatasets; j++) {
     				dayrow.push(datarow[j]);
     			}
     			days.push(dayrow);
     		}											
     		
-    		prevDate=d;
-			hour=[];
+    		prevDate=d;		
 			for (j=0; j<nrdatasets; j++){
 				datarow[j]=[];
     		}
     	}    	
     	for (j=0; j<nrdatasets; j++){
-    		datarow[j].push(row[j+3]);
+    		datarow[j].push(row[j+2]);
     	}
-    	
-    	hour.push(row[2]);    	
+    	    	
     	for (j=0; j<nrdatasets; j++) {
-    		val=row[j+3];
+    		val=row[j+2];
     		if (val<meta[j].min) meta[j].min=val;  
     		if (val>meta[j].max) meta[j].max=val;
     	}
     	
     }
 	dayrow=[]		
-	dayrow.push(prevDate)
-	dayrow.push(hour);
+	dayrow.push(prevDate)	
 	for (j=0; j<nrdatasets; j++) {
 		dayrow.push(datarow[j]);
 	}
@@ -169,9 +158,9 @@ function prep_daydata (data, dateformat) {
 function draw_cal(from,to) {
 
 
-	t0=new Date(from.getFullYear(),from.getMonth(), from.getDate());
+	t0=from;
 	console.log(from.getFullYear(),from.getMonth(), from.getDate());		
-	t1=new Date(to.getFullYear(),to.getMonth(), to.getDate());
+	t1=to;
 	console.log('drawcal:',t0,t1)
 
 	$('#calendar').html('init');
@@ -243,7 +232,8 @@ function draw_cal(from,to) {
 function draw_days_in_calendar (daydata) {
 
 	console.log('drawdays:',from,to);
-	d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
+	//d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
+	d=from;
 	j=0;
 	while (d<to) {			
 		var day = d.getDate();
@@ -472,7 +462,7 @@ function init_page () {
 	$('#keyentry').on('change',update_selectie);
 	update_variablenames();
 
-	newdata=prep_data(data);
+	newdata=data; //prep_data(data);
 	daydata=prep_daydata(newdata);
 	console.log('upd:',from,to);
 	draw_cal (from, to);

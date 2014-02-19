@@ -11,15 +11,15 @@ class calendar:
     
     def build_data(self,args):
 
-        
-
         recordinfo=args['recordinfo']
+        sep=args['separator']
         if recordinfo is None:
             raise RuntimeError('recordinfo needed, add -record to cmdline')
         cols=recordinfo.split(',')
         cols=[col.strip() for col in cols]
-        key=None
+        
         c=0
+        key=None
         keyindex=None
         if 'key' in cols:
             keyindex=cols.index('key')
@@ -38,6 +38,7 @@ class calendar:
         dataindex=[]
         for datacolname in datacolnames:
             dataindex.append(cols.index(datacolname))
+        print dataindex
 
         js='var meta=[';
         if keyindex is not None:
@@ -53,7 +54,7 @@ class calendar:
                 
         firstline=True
         js+='var data=[\n'
-        prevkey=None
+        prevkey=''
         index_start={}
         index_end={}
         linenr=0
@@ -61,9 +62,10 @@ class calendar:
             line=line.strip();            
             if line[0]=='#':
                 continue
-            datacols=line.split(',')
+            datacols=line.split(sep)
             datacols=[datacol.strip() for datacol in datacols]
-            js+='['            
+            js+='['
+            keyval=''
             if keyindex is not None:
                 keyval=datacols[keyindex]
             if keyidindex is not None:
@@ -74,7 +76,7 @@ class calendar:
                     index_end[prevkey]=linenr
                 index_start[keyval]=linenr
                 prevkey=keyval
-                
+                            
             js+=",Date('"+datacols[dateindex]+"')"            
             js+=','+','.join([datacols[d] for d in dataindex])
             js+='],\n'
@@ -140,10 +142,12 @@ parser = argparse.ArgumentParser(description='generate calendar from repeating d
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-c', '--csv', dest='csv',  help='csv input file name')
 group.add_argument('-jsdir', '--jsdir', dest='jsdir',  help='directory with js files')
-parser.add_argument('-html', dest='htmlfile',  help='name of html outputfile', required=False, default=True, action='store_true')
+parser.add_argument('--html', dest='htmlfile',  help='name of html outputfile', required=False)
 parser.add_argument('-record', dest='recordinfo',  help='record description: key,keyid,date,hour,datalabel,dummy', required=True)
+parser.add_argument('-s', '--separator', dest='separator',  help='separator', required=False, default=',')
+parser.add_argument('-df', '--dateformat', dest='dateformat',  help='date format (strptime style)')
 parser.add_argument('-keyfile', dest='keyfile',  help='for mapping keyids to keylabels', required=False)
-parser.add_argument('-dirfile', dest='dirfile',  help='for mapping directory keys to labels', required=False)
+parser.add_argument('-d','--dirfile', dest='dirfile',  help='for mapping directory keys to labels', required=False)
 args=vars(parser.parse_args())
 
 

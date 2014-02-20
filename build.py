@@ -1,4 +1,5 @@
 import sys, json, argparse
+from datetime import datetime
 
 
 
@@ -12,6 +13,7 @@ class calendar:
     def build_data(self,args):
 
         recordinfo=args['recordinfo']
+        dateformat=args['dateformat']
         sep=args['separator']
         if recordinfo is None:
             raise RuntimeError('recordinfo needed, add -record to cmdline')
@@ -29,7 +31,7 @@ class calendar:
             keyidindex=cols.index('keyid')
             c+=1
         if not('date' in cols):
-            raise  RuntimeError('date-col needed in record')      
+            raise  RuntimeError('date-col needed in record')        
         dateindex=cols.index('date')        
         datacolnames=[];
         for col in cols:
@@ -70,14 +72,19 @@ class calendar:
                 keyval=datacols[keyindex]
             if keyidindex is not None:
                 keyval=datacols[keyidindex]
-            js+=keyval
-            if keyval!=prevkey:
-                if prevkey is not None:
-                    index_end[prevkey]=linenr
-                index_start[keyval]=linenr
-                prevkey=keyval
-                            
-            js+=",Date('"+datacols[dateindex]+"')"            
+            if keyval!='':
+                js+=keyval+','
+                if keyval!=prevkey:
+                    if prevkey is not None:
+                        index_end[prevkey]=linenr
+                    index_start[keyval]=linenr
+                    prevkey=keyval
+            # date parsen                
+            datestring=datacols[dateindex]
+            
+            dateval=datetime.strptime(datestring,dateformat)            
+            js+="Date('"+dateval.isoformat()+"')"
+            
             js+=','+','.join([datacols[d] for d in dataindex])
             js+='],\n'
             linenr+=1

@@ -83,7 +83,7 @@ class calendar:
             datestring=datacols[dateindex]
             
             dateval=datetime.strptime(datestring,dateformat)            
-            js+="Date('"+dateval.isoformat()+"')"
+            js+="new Date('"+dateval.isoformat()+"')"
             
             js+=','+','.join([datacols[d] for d in dataindex])
             js+='],\n'
@@ -93,7 +93,7 @@ class calendar:
         index_end[keyval]=linenr;
 
 
-        # dit kan in json, maar wordt een stuk onleesbaarder dan
+        # dit kan in json, maar JSON-data wordt een stuk onleesbaarder dan (op een regel)
         keyfile=args['keyfile']
         if keyfile is not None:
             f=open(keyfile,'r')

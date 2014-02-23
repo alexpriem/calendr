@@ -19,48 +19,63 @@ class calendar:
             raise RuntimeError('recordinfo needed, add -record to cmdline')
         cols=recordinfo.split(',')
         cols=[col.strip() for col in cols]
+        csv=args['csv']
+        f=open(csv,"r")
+        js=''
+        varnames=f.readline().strip().split(sep);
         
+
         c=0
         key=None
         keyindex=None
+        vartypes=[]
         if 'key' in cols:
             keyindex=cols.index('key')
+            vartypes.append('key')
             c+=1
         keyidindex=None
         if 'keyid' in cols:
             keyidindex=cols.index('keyid')
+            vartypes.append('keyid')
             c+=1
         if not('date' in cols):
-            raise  RuntimeError('date-col needed in record')        
-        dateindex=cols.index('date')        
+            raise  RuntimeError('date-col needed in record')
+        c+=1
+        dateindex=cols.index('date')
+        vartypes.append('date')
         datacolnames=[];
-        for col in cols:
-            if col not in ['key','keyid','date','dummy']:
-                datacolnames.append(col)
-        dataindex=[]
-        for datacolname in datacolnames:
-            dataindex.append(cols.index(datacolname))
-        print dataindex
-
-        js='var meta=[';
-        if keyindex is not None:
-            js+='"key",'
-        if keyidindex is not None:
-            js+='"keyid",'
-        js+='"date",'
-        js+='"'+'","'.join(datacolnames)
-        js+='"];\n\n'
+        dataindex=[];
+        new_dataindex=[]
+        for i,col in enumerate(cols):
+            if col=='data':                
+                datacolnames.append(varnames[i])
+                vartypes.append('data')
+                dataindex.append(i)
+                new_dataindex.append(c)
+                c+=1
         
-        csv=args['csv']
-        lines=open(csv,"r").readlines()
-                
+        
+        
+        s=json.dumps(vartypes)
+        js+='var var_types='+s+';\n';
+        s=json.dumps(varnames)        
+        js+='var var_names='+s+';\n';
+        s=json.dumps(datacolnames)        
+        js+='var data_names='+s+';\n';
+        s=json.dumps(new_dataindex)        
+        js+='var data_index='+s+';\n';
+        
         firstline=True
         js+='var data=[\n'
         prevkey=''
         index_start={}
         index_end={}
         linenr=0
-        for line in lines:
+        datedelta=None
+        prevdate=None
+        mindate=None
+        maxdate=None
+        for line in f.readlines():
             line=line.strip();            
             if line[0]=='#':
                 continue
@@ -79,19 +94,36 @@ class calendar:
                         index_end[prevkey]=linenr
                     index_start[keyval]=linenr
                     prevkey=keyval
-            # date parsen                
-            datestring=datacols[dateindex]
+                    
+            # date parsen en afhandelen
+            datestring=datacols[dateindex]            
+            dateval=datetime.strptime(datestring,dateformat)
+            if prevdate is not None:
+                datediff=dateval-prevdate
+                if datedelta is None:
+                    datedelta=datediff                    
+                if datediff.total_seconds()!=0 and datediff<datedelta:
+                    datedelta=datediff
+            prevdate=dateval
+            if mindate is None:
+                mindate=dateval
+            if maxdate is None:
+                maxdate=dateval
+            if dateval<mindate:
+                mindate=dateval                
+            if dateval>maxdate:
+                maxdate=dateval
+                
+            js+="new Date('"+dateval.isoformat()+"'),"
             
-            dateval=datetime.strptime(datestring,dateformat)            
-            js+="new Date('"+dateval.isoformat()+"')"
-            
-            js+=','+','.join([datacols[d] for d in dataindex])
+            js+=','.join([datacols[d] for d in dataindex])
             js+='],\n'
             linenr+=1
             
         js=js[:-2]+'];\n\n';
-        index_end[keyval]=linenr;
-
+        if keyval!='':
+            index_end[keyval]=linenr;            
+        
 
         # dit kan in json, maar JSON-data wordt een stuk onleesbaarder dan (op een regel)
         keyfile=args['keyfile']
@@ -121,11 +153,22 @@ class calendar:
 
 
         s=json.dumps(index_start)
-        js+='\n\n var index_start='+s+';\n';
+        js+='\n\nvar index_start='+s+';\n';
         s=json.dumps(index_end)
-        js+='\n\n var index_end='+s+';\n';
-            
-            
+        js+='var index_end='+s+';\n';
+
+        js+="startdate=new Date('"+mindate.isoformat()+"');\n"
+        js+="enddate=new Date('"+maxdate.isoformat()+"');\n"
+
+        if datedelta.days>7:
+            reprange='month';
+        if datedelta.days>0 and datedelta.days<=7:
+            reprange='week';        
+        if datedelta.days==0 and datedelta.seconds>600:
+            reprange='day'
+        if datedelta.days==0 and datedelta.seconds<600:
+            reprange='hour'
+        js+='var reprange="'+reprange+'";\n'
         
         g=open("js/data.js","w");
         g.write(js)

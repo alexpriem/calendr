@@ -1,8 +1,8 @@
 
 meta=[{label:'d0',min:0,max:0}];
-varname=labels[3];
+varname=var_names[0];
 
-nrdatasets=labels.length-3;
+nrdatasets=data_names.length;
 width=500;
 height=500;
 var from=new Date('2009-01-05');
@@ -92,7 +92,7 @@ function prep_daydata (data, dateformat) {
 
 	console.log('prep_daydata', from,to);
 	var prevDate=new Date();
-	var days=[];
+	var timeseries=[];
 	var hour=[];	
 
 	console.log('datePeriod',datePeriod);
@@ -106,20 +106,18 @@ function prep_daydata (data, dateformat) {
 	prevDate=data[0][0];
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
-    	if (row[0]!=selected_keyid) continue;
+    	//if (row[0]!=selected_keyid) continue;
     	d=row[0];    	
     	if (d<from) continue;
     	if (d>to)  continue;
 
 		delta=d - prevDate;
-		if (delta>datePeriod) {   	
-    		if (day!=0) {    	
-    			dayrow=[]		
-    			dayrow.push(prevDate)    			
+		if (delta>datePeriod) {   	    		
+    			timeserie=[]		
+    			timeserie.push(prevDate);		
     			for (j=0; j<nrdatasets; j++) {
-    				dayrow.push(datarow[j]);
-    			}
-    			days.push(dayrow);
+    				timeserie.push(datarow[j]);    			
+    			timeseries.push(timeserie);
     		}											
     		
     		prevDate=d;		
@@ -138,20 +136,20 @@ function prep_daydata (data, dateformat) {
     	}
     	
     }
-	dayrow=[]		
-	dayrow.push(prevDate)	
+	timeserie=[]		
+	timeserie.push(prevDate)	
 	for (j=0; j<nrdatasets; j++) {
-		dayrow.push(datarow[j]);
+		timeserie.push(timeserie[j]);
 	}
-	days.push(dayrow);
+	timeseries.push(timeserie);
 
-	console.log('dag0:',days[0]);
-	console.log('dag1:',days[1]);
-	console.log('dag2:',days[2]);
-	console.log('dag3:',days[3]);
+	console.log('dag0:',timeseries[0]);
+	console.log('dag1:',timeseries[1]);
+	console.log('dag2:',timeseries[2]);
+	console.log('dag3:',timeseries[3]);
 	
-	console.log(meta);
-    return days;
+	
+    return timeseries;
 }
 
 
@@ -255,7 +253,7 @@ function draw_calendar_plot (daydata) {
 	.attr('width', width)
 	.attr('height', height);
 
-	varindex=labels.indexOf(varname)-3;
+	varindex=data_names.indexOf(varname);
 	var xScale=d3.time.scale();
 
 
@@ -445,14 +443,14 @@ function click_varname () {
 function update_variablenames() {
 
 	var list='';
-	for (i=3; i<labels.length; i++) {
-		varname=labels[i];			
+	for (i=0; i<data_names.length; i++) {
+		varname=data_names[i];			
 		console.log(varname);
 		list+='<li> <a href="#" id="'+varname+'" class="varname" >'+ varname+'</a> </li>';
 	}
 	$('#datasel_list').html(list);
 	$('.varname').on('click',click_varname);
-	varname=labels[3];
+	varname=data_names[0];
 }
 
 function init_page () {

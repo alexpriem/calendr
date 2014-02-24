@@ -148,8 +148,11 @@ class calendar:
 
             f.seek(0)
             line=f.readline().strip().split(',')
-            js+='selected_keylabel=keylabel[0];\n'
-            js+='selected_keyid=key2id[selected_keylabel];\n'
+            js+='var selected_keylabel=keylabel[0];\n'
+            js+='var selected_keyid=key2id[selected_keylabel];\n'
+        else:
+            js+='var selected_keylabel="";\n'
+            js+='var selected_keyid="";\n'
 
 
         s=json.dumps(index_start)
@@ -157,18 +160,24 @@ class calendar:
         s=json.dumps(index_end)
         js+='var index_end='+s+';\n';
 
-        js+="startdate=new Date('"+mindate.isoformat()+"');\n"
-        js+="enddate=new Date('"+maxdate.isoformat()+"');\n"
+        js+="var min_date=new Date('"+mindate.isoformat()+"');\n"
+        js+="var max_date=new Date('"+maxdate.isoformat()+"');\n"
 
         if datedelta.days>7:
             reprange='month';
+            dateperiod=31*24*3600*1000;
         if datedelta.days>0 and datedelta.days<=7:
-            reprange='week';        
+            reprange='week';
+            dateperiod=6*24*3600*1000;
         if datedelta.days==0 and datedelta.seconds>600:
             reprange='day'
+            dateperiod=23*3600*1000;
         if datedelta.days==0 and datedelta.seconds<600:
             reprange='hour'
+            dateperiod=3600*1000;
         js+='var reprange="'+reprange+'";\n'
+        js+='var datePeriod='+str(dateperiod)+';\n'
+        
         
         g=open("js/data.js","w");
         g.write(js)

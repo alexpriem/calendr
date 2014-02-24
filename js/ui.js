@@ -5,14 +5,13 @@ varname=var_names[0];
 nrdatasets=data_names.length;
 width=500;
 height=500;
-var from=new Date('2009-01-05');
-var to=new Date('2009-12-31');
+var from=min_date;
+var to=max_date;
 
 
-datePeriod=new Date(2011,1,2)-new Date(2011,1,1);  // day
-dateBlock=60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
-datePeriod=new Date(2011,1,8)-new Date(2011,1,1); // week
-dateBlock= 3.3*60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
+
+
+dateBlock= 21*60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
 // ? factor 2.5 off?
 //datePeriod=new Date(2011,1,14)-new Date(2011,1,1); // week
 //dateBlock= 12*60*60*1000; //datePeriod/(60*60*1000); // lookup either smallest or most occurring time difference.
@@ -88,49 +87,79 @@ function prep_data (data, dateformat) {
  return newdata;
 }
 
-function prep_daydata (data, dateformat) {
+function prep_timeseries (data, dateformat) {
 
-	console.log('prep_daydata', from,to);
+	console.log('prep_timeseries', from,to);
 	var prevDate=new Date();
 	var timeseries=[];
 	var hour=[];	
 
-	console.log('datePeriod',datePeriod);
+	
 
 	datarow=[];
 	for (i=0; i<nrdatasets; i++){		
-		meta[i]={min:data[0][i+2],max:data[0][i+2]};		
-		datarow[i]=[];    	
+		meta[i]={label:data_names[i],
+				 min:data[0][data_index[i]],
+				 max:data[0][data_index[i]]};				
 	}
 
-	prevDate=data[0][0];
+	var has_key=false;
+	if (var_types.indexOf('keyid')>=0) {
+		has_key=true;
+	}
+
+
+// handling depends on datePeriod:
+// hour: ok.
+// day: x-axis=hour
+// week: x-axis=day of week  (because of DST)
+// month: x-axis=day of month
+// year: x-axis=day in year
+// also todo: handle missing date-records (push x with y)
+	var firstitem=true;
+	var delta=0;
+	console.log('datePeriod',datePeriod, has_key);
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
-    	//if (row[0]!=selected_keyid) continue;
+    	if (has_key) {
+    		if (row[0]!=selected_keyid) continue;
+    	}
     	d=row[0];    	
+
     	if (d<from) continue;
     	if (d>to)  continue;
-
-		delta=d - prevDate;
-		if (delta>datePeriod) {   	    		
-    			timeserie=[]		
-    			timeserie.push(prevDate);		
-    			for (j=0; j<nrdatasets; j++) {
-    				timeserie.push(datarow[j]);    			
-    			timeseries.push(timeserie);
-    		}											
-    		
-    		prevDate=d;		
+    	//console.log('got date:',d,prevDate,firstitem,delta,datePeriod);
+    	if (firstitem) {
+			prevDate=d;
+			firstitem=false;
 			for (j=0; j<nrdatasets; j++){
 				datarow[j]=[];
     		}
+		}  else {
+			delta=d - prevDate;	
+			if ((d.getFullYear()<2009) && (d.getMonth()<6)) {
+				console.log(d,delta, datePeriod);
+			}
+			if (delta>=datePeriod) {   	    
+				console.log('line:',d,delta,datePeriod);
+				prevDate=prevDate+datePeriod;
+    			timeserie=[prevDate];
+    			for (j=0; j<nrdatasets; j++) {
+    				timeserie.push(datarow[j]);   
+    				} 			
+    			timeseries.push(timeserie);
+    			firstitem=true;
+    			for (j=0; j<nrdatasets; j++){
+					datarow[j]=[];
+    			}
+    		}											    		    				
     	}    	
     	for (j=0; j<nrdatasets; j++){
-    		datarow[j].push(row[j+2]);
+    		datarow[j].push(row[data_index[j]]);
     	}
     	    	
     	for (j=0; j<nrdatasets; j++) {
-    		val=row[j+2];
+    		val=row[data_index[j]];
     		if (val<meta[j].min) meta[j].min=val;  
     		if (val>meta[j].max) meta[j].max=val;
     	}
@@ -139,7 +168,7 @@ function prep_daydata (data, dateformat) {
 	timeserie=[]		
 	timeserie.push(prevDate)	
 	for (j=0; j<nrdatasets; j++) {
-		timeserie.push(timeserie[j]);
+		timeserie.push(datarow[j]);
 	}
 	timeseries.push(timeserie);
 
@@ -227,7 +256,7 @@ function draw_cal(from,to) {
 }
 
 
-function draw_days_in_calendar (daydata) {
+function draw_days_in_calendar (timeseries) {
 
 	console.log('drawdays:',from,to);
 	//d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
@@ -245,7 +274,7 @@ function draw_days_in_calendar (daydata) {
 
 
 
-function draw_calendar_plot (daydata) {
+function draw_calendar_plot (timeseries) {
 
 	var canvas= d3.select ('#calplot').append('svg')
 	.attr('xmlns',"http://www.w3.org/2000/svg")
@@ -331,8 +360,6 @@ function draw_calendar_plot (daydata) {
     	.attr("x", 10)
     	.text(meta[0].label);
 
-	
-
 
 console.log('datePeriod:',datePeriod);
 console.log('dateBlock:',dateBlock);
@@ -343,18 +370,19 @@ var line=d3.svg.line()
 
 	
 	xdata=[];
-	for (i=1; i<daydata.length; i++) xdata.push((i-1) * dateBlock);  //uren 
+	for (i=1; i<timeseries.length; i++) xdata.push((i-1) * dateBlock);  //uren 
 	
-
-	console.log('daydata:',daydata[1]);
-	for (i=1; i<daydata.length; i++) {
+	console.log('timeseries:',timeseries[1]);
+	for (i=1; i<timeseries.length; i++) {
 
 		
-		ydata=daydata[i][varindex+2];  //data
+		ydata=timeseries[i][varindex+1];  //data
+		d=timeseries[i][0];
+		day=
 
     
 	canvas.append("svg:path")
-		.attr("id","l_"+day+"_"+month)
+		.attr("id","l_"+i)
 		.attr("class","dayl")
 		.attr("d", line(ydata))
 		.style("stroke","blue")
@@ -372,10 +400,10 @@ function update_selectie () {
 	selected_keyid=key2id[selected_keylabel];
 	console.log ('selectie=',selected_keyid);
 
-	draw_days_in_calendar (daydata);
+	draw_days_in_calendar (timeseries);
 	$('#cal_svg').remove();
-	daydata=prep_daydata(newdata);	
-	draw_calendar_plot(daydata);
+	timeseries=prep_timeseries(newdata);	
+	draw_calendar_plot(timeseries);
 }
 
 
@@ -389,11 +417,11 @@ function update_month () {
  console.log(from,to);
 
  $('.day').removeClass('hasData');
- draw_days_in_calendar (daydata);
+ draw_days_in_calendar (timeseries);
 
  $('#cal_svg').remove();
- daydata=prep_daydata(newdata);	
- draw_calendar_plot(daydata);
+ timeseries=prep_timeseries(newdata);	
+ draw_calendar_plot(timeseries);
 }
 
 function update_plot () {
@@ -408,16 +436,19 @@ function update_plot () {
  newDate=new Date(year,month,day);
  console.log('newdate:',newDate);
  console.log('from,to:',from,to);
- if (newDate<from) from=newDate; 
- else to=newDate;
+ if (newDate<from) {
+ 	from=newDate; 
+ }  else {
+ 	to=newDate;
+ }
  console.log('from,to:',from,to);
 
  $('.day').removeClass('hasData');
- draw_days_in_calendar (daydata);
+ draw_days_in_calendar (timeseries);
 
  $('#cal_svg').remove();
- daydata=prep_daydata(newdata);	
- draw_calendar_plot(daydata);
+ timeseries=prep_timeseries(newdata);	
+ draw_calendar_plot(timeseries);
 }
 
 function update_calday () {
@@ -437,7 +468,7 @@ function click_varname () {
 	varname=this.id;
 	console.log(varname);		
 	$('#cal_svg').remove();
- 	draw_calendar_plot(daydata);
+ 	draw_calendar_plot(timeseries);
 }
 
 function update_variablenames() {
@@ -460,14 +491,13 @@ function init_page () {
 	$('#keyentry').on('change',update_selectie);
 	update_variablenames();
 
-	newdata=data; //prep_data(data);
-	daydata=prep_daydata(newdata);
+	timeseries=prep_timeseries(data);
 	console.log('upd:',from,to);
 	draw_cal (from, to);
 	console.log('upd2:',from,to);
 
-	draw_days_in_calendar (daydata);
-	draw_calendar_plot(daydata);
+	draw_days_in_calendar (timeseries);
+	draw_calendar_plot(timeseries);
 
 	$('.day').on('click',update_plot);
 	$('.monthheader').on('click',update_month);

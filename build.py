@@ -168,10 +168,10 @@ class calendar:
             dateperiod=31*24*3600*1000;
         if datedelta.days>0 and datedelta.days<=7:
             reprange='week';
-            dateperiod=6*24*3600*1000;
+            dateperiod=7*24*3600*1000;
         if datedelta.days==0 and datedelta.seconds>600:
             reprange='day'
-            dateperiod=23*3600*1000;
+            dateperiod=24*3600*1000;
         if datedelta.days==0 and datedelta.seconds<600:
             reprange='hour'
             dateperiod=3600*1000;

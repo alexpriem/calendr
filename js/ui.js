@@ -8,6 +8,17 @@ height=500;
 var from=min_date;
 var to=max_date;
 
+// tijdelijke oplossing; echte oplossing moet uitgaan van echte maanden, d.i. maatwerk.
+// dito kwartaal/jaren.
+var reprate_to_period={
+	'jaar':365*24*3600*1000,
+	'kwartaal':90*24*3600*1000,
+	'maand':31*24*3600*1000,
+	'week':31*24*3600*1000,
+	'day':1*24*3600*1000,
+	'uur':3600*1000};
+
+
 
 
 
@@ -96,7 +107,7 @@ function prep_timeseries (data, dateformat) {
 
 	
 
-	datarow=[];
+
 	for (i=0; i<nrdatasets; i++){		
 		meta[i]={label:data_names[i],
 				 min:data[0][data_index[i]],
@@ -119,6 +130,15 @@ function prep_timeseries (data, dateformat) {
 	var firstitem=true;
 	var delta=0;
 	console.log('datePeriod',datePeriod, has_key);
+
+	beginRange=from;
+	endRange=from-0+datePeriod;    // + has typing issues, therefore substract 0 first.
+	console.log('beginrange/endrange',beginRange, endRange);
+	datarow=[];
+	for (j=0; j<nrdatasets; j++){
+		datarow[j]=[];
+  		}
+
     for (i=0; i<data.length; i++) {
     	row=data[i];    	
     	if (has_key) {
@@ -128,36 +148,32 @@ function prep_timeseries (data, dateformat) {
 
     	if (d<from) continue;
     	if (d>to)  continue;
-    	//console.log('got date:',d,prevDate,firstitem,delta,datePeriod);
-    	if (firstitem) {
-			prevDate=d;
-			firstitem=false;
-			for (j=0; j<nrdatasets; j++){
+    	if (d<beginRange) continue;
+	
+    	if (d>endRange) {   // add next element
+    		beginRange=endRange;			
+			endRange=new Date(endRange-0+datePeriod);			
+			console.log('line:',d,beginRange, endRange, datarow[0].length);
+			timeserie=datarow;
+    		timeserie=[beginRange];
+    		for (j=0; j<nrdatasets; j++) {
+    			timeserie.push(datarow[j]);   
+    			} 			
+    		timeseries.push(timeserie);
+    		firstitem=true;
+    		for (j=0; j<nrdatasets; j++){
 				datarow[j]=[];
     		}
-		}  else {
-			delta=d - prevDate;	
-			if ((d.getFullYear()<2009) && (d.getMonth()<6)) {
-				console.log(d,delta, datePeriod);
-			}
-			if (delta>=datePeriod) {   	    
-				console.log('line:',d,delta,datePeriod);
-				prevDate=prevDate+datePeriod;
-    			timeserie=[prevDate];
-    			for (j=0; j<nrdatasets; j++) {
-    				timeserie.push(datarow[j]);   
-    				} 			
-    			timeseries.push(timeserie);
-    			firstitem=true;
-    			for (j=0; j<nrdatasets; j++){
-					datarow[j]=[];
-    			}
-    		}											    		    				
-    	}    	
+    	}
+
     	for (j=0; j<nrdatasets; j++){
     		datarow[j].push(row[data_index[j]]);
     	}
-    	    	
+
+
+
+    	//console.log('got date:',d,prevDate,firstitem,delta,datePeriod);
+    	    	// maxima / minima van deze selectie uitrekenen.
     	for (j=0; j<nrdatasets; j++) {
     		val=row[data_index[j]];
     		if (val<meta[j].min) meta[j].min=val;  
@@ -166,7 +182,7 @@ function prep_timeseries (data, dateformat) {
     	
     }
 	timeserie=[]		
-	timeserie.push(prevDate)	
+	timeserie.push(beginRange)	
 	for (j=0; j<nrdatasets; j++) {
 		timeserie.push(datarow[j]);
 	}
@@ -291,7 +307,7 @@ function draw_calendar_plot (timeseries) {
 
 	console.log('minmax:',varname, varindex, meta[varindex]);
 	var yScale=d3.scale.linear();
-    yScale.domain([meta[varindex].min, meta[varindex].max]);
+    yScale.domain([meta[varindex].max, meta[varindex].min]);
 	yScale.range([50,height-50]); 
 	var line = d3.svg.line();
 
@@ -378,7 +394,6 @@ var line=d3.svg.line()
 		
 		ydata=timeseries[i][varindex+1];  //data
 		d=timeseries[i][0];
-		day=
 
     
 	canvas.append("svg:path")
@@ -471,25 +486,35 @@ function click_varname () {
  	draw_calendar_plot(timeseries);
 }
 
-function update_variablenames() {
+function update_variablename_html() {
 
-	var list='';
+	var list='<li> <h5>Variabele: </h5></li>';
 	for (i=0; i<data_names.length; i++) {
 		varname=data_names[i];			
 		console.log(varname);
-		list+='<li> <a href="#" id="'+varname+'" class="varname" >'+ varname+'</a> </li>';
+		list+='<li> <a href="#" id="'+varname+'" class="varname" data-varname="'+varname+'" >'+ varname+'</a> </li>';
 	}
 	$('#datasel_list').html(list);
 	$('.varname').on('click',click_varname);
 	varname=data_names[0];
 }
 
+function change_reprate () {
+	
+	reprange=$(this).attr('data-reprate');
+	datePeriod=reprate_to_period[reprange];
+	$('#cal_svg').remove();
+	timeseries=prep_timeseries(newdata);	
+	draw_calendar_plot(timeseries);
+}
+
+
 function init_page () {
 
 
 //	$('#keyentry').typeahead({source:keylabel});
 	$('#keyentry').on('change',update_selectie);
-	update_variablenames();
+	update_variablename_html();
 
 	timeseries=prep_timeseries(data);
 	console.log('upd:',from,to);
@@ -502,6 +527,8 @@ function init_page () {
 	$('.day').on('click',update_plot);
 	$('.monthheader').on('click',update_month);
 	$('#read').on('click',read_data);
+	$('.repsel').on('click',change_reprate);
+	$('.varname').on('click',click_varname);
 
 }
 

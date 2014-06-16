@@ -66,11 +66,12 @@ background-color: #8a0000;
 }
 
 
-.calendar {	
-	float:right;
-	width:500px;
-}
-.calplot {
+#calendar {	
 	float:left;
 	width:500px;
+}
+#calplot {
+	float:right;
+	width:500px;
+	vertical-align:top;
 }

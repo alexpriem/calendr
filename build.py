@@ -1,5 +1,7 @@
 import sys, json, argparse
 from datetime import datetime
+import dateutil.parser
+
 
 
 
@@ -97,7 +99,8 @@ class calendar:
                     
             # date parsen en afhandelen
             datestring=datacols[dateindex]            
-            dateval=datetime.strptime(datestring,dateformat)
+            #dateval=datetime.strptime(datestring,dateformat)
+            dateval=dateutil.parser.parse(datestring)
             if prevdate is not None:
                 datediff=dateval-prevdate
                 if datedelta is None:
@@ -129,6 +132,7 @@ class calendar:
         keyfile=args['keyfile']
         if keyfile is not None:
             f=open(keyfile,'r')
+            f.readline()   # skip header
             id2keyjs='id2key={'
             key2idjs='key2id={'
             keylabeljs='keylabel=['
@@ -201,7 +205,7 @@ parser = argparse.ArgumentParser(description='generate calendar from repeating d
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-c', '--csv', dest='csv',  help='csv input file name')
 group.add_argument('-jsdir', '--jsdir', dest='jsdir',  help='directory with js files')
-parser.add_argument('--html', dest='htmlfile',  help='name of html outputfile', required=False)
+parser.add_argument('-html', dest='htmlfile',  help='name of html outputfile', required=False)
 parser.add_argument('-record', dest='recordinfo',  help='record description: key,keyid,date,hour,datalabel,dummy', required=True)
 parser.add_argument('-s', '--separator', dest='separator',  help='separator', required=False, default=',')
 parser.add_argument('-df', '--dateformat', dest='dateformat',  help='date format (strptime style)')

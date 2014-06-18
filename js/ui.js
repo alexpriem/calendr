@@ -315,15 +315,21 @@ function draw_cal(from,to) {
 
 	var year=t0.getFullYear();
 	var out='<table>\n';
-	out+='<tr><th></th><td class="hspacer"> </td> <th id="yearlbl">'+year+'</th><td class="hspacer"> </td> <th></th>';
-	out+='<tr>\n';
+	out+='<tr>'
+	out+=' 		<th><label for="from_date">Begindatum </label> <input type="text" name="from_date" id="input_from_date" maxlength=8></th>';
+	out+='  	<th></th>';
+	out+='		<th></th>';
+	out+='		<th colspan="2"><label for="from_date ">Einddatum </label> <input type="text" name="to_date" id="input_to_date" maxlength=8></th>';
+	out+=' </tr>\n';
+	out+='<tr> <th></th> <td class="hspacer"> </td> <th id="yearlbl">'+year+'</th><td class="hspacer"> </td> <th></th>  </tr>\n';
+
+	
 	monthNr=0;
 
 
 	while (t0<t1) {
 
-		out+='<td valign="top"><table id="calendartbl">\n';
-
+		out+='<td valign="top"><table id="calendartbl">\n';		
 		out+='<tr><th colspan="7" class="monthheader" id="m_'+t0.getMonth()+'">' +monthNames[t0.getMonth()]+' </th></tr>\n';
 		out+='<tr>';
 		j=0;

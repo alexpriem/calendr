@@ -75,3 +75,26 @@ background-color: #8a0000;
 	width:500px;
 	vertical-align:top;
 }
+
+#input_to_date {
+	width:65px;
+}
+
+#input_from_date {
+	width:65px;
+}
+
+
+#repsel_list  {
+	list-style-type:none;
+}
+
+.repsel  {
+ list-style:none;
+}
+
+#datasel_list {
+	list-style-type:none;
+}
+
+}

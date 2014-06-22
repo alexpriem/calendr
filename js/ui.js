@@ -1,5 +1,5 @@
 
-
+year=2013; //FIXME: selected year
 meta=[{label:'d0',min:0,max:0}];
 varname=var_names[0];
 
@@ -21,14 +21,14 @@ var reprate_to_period={
 	'year':365*24*3600*1000,
 	'quarter':90*24*3600*1000,
 	'month':31*24*3600*1000,
-	'week':31*24*3600*1000,
+	'week':7*24*3600*1000,
 	'day':1*24*3600*1000,
 	'hour':3600*1000};
 
 var reprate_to_timestep={
 	'year':12,
 	'quarter':12,
-	'month':31,
+	'month':31,   // hangt van maand af
 	'week':7,
 	'day':24,
 	'hour':12
@@ -118,11 +118,12 @@ function prep_timeseries (data) {
 
 	console.log('prep_timeseries');
 	// tijdelijk spul
+	var i,j;
 	var keycol=0;
 	var datecol=1;
 	var datacol=2;
 
-
+	
 	var prevDate=new Date();
 	var timeseries=[];
 	var hour=[];	
@@ -270,7 +271,7 @@ function prep_timeseries (data) {
     	}
 	console.log(timeseries) ;
 
-    console.log("next");
+    console.log('next');
 	for (j=0; j<nrdatasets; j++){
 		datarow[j].push(row[data_index[j]]);
 	}
@@ -385,7 +386,7 @@ function draw_days_in_calendar (timeseries) {
 
 	console.log('drawdays:',from_date,to_date);
 	//d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
-	d=from_date;
+	d=new Date(from_date.getFullYear(),from_date.getMonth(), from_date.getDate());
 	j=0;
 	while (d<to_date) {			
 		var day = d.getDate();
@@ -408,14 +409,94 @@ function draw_calendar_plot (timeseries) {
 	.attr('height', height);
 
 	varindex=data_names.indexOf(varname);
-	var xScale=d3.time.scale();
-
 	var repPeriod=reprate_to_period[reprate];
+
+	console.clear();
+	console.log ('draw_calendar_plot:',reprate,repPeriod);
+
+
+
+var customDayFormat = d3.time.format("%H");
+var customWeekFormat = d3.time.format("%a %H");
+var customMonthFormat = d3.time.format("%e");
+var customQuarterFormat = d3.time.format("%e %b");
+var customYearFormat = d3.time.format("%b");  
+
+
+	if (reprate=='day'){  //http://bl.ocks.org/mbostock/4149176
+		timelabel='tijd (uur)';
+		var xScale=d3.time.scale()
+			//.domain([new Date(2014,0,1), new Date(new Date(2014,0,1).valueOf()+repPeriod) ])   // time in ms
+			.domain([0,repPeriod ])   // time in ms
+
+			//.nice(d3.time.day)			
+			.range([50,width]);
+			xScale.ticks(d3.time.hour,3);
+		var xAxis=d3.svg.axis()
+			.scale(xScale)
+    		.orient("bottom")
+    		.tickFormat(customDayFormat);
+
+	}
+	if (reprate=='week'){
+		timelabel='weekdag';
+		var xScale=d3.time.scale()
+			.domain([0,7*24*3600*1000])   // time in ms			
+			.range([50,width]);
+			xScale.ticks(d3.time.week,1);
+
+		var xAxis=d3.svg.axis()
+			.scale(xScale)
+    		.orient("bottom")
+    		.tickFormat(customWeekFormat);
+					
+	}
+	if (reprate=='month'){
+		timelabel='dag';
+		var xScale=d3.time.scale()
+			.domain([0,repPeriod])   // time in ms			
+			.range([50,width]);		
+
+		var xAxis=d3.svg.axis()
+			.scale(xScale)
+			.tickFormat(customMonthFormat)
+    		.orient("bottom");
+
+	}
+
+	if (reprate=='quarter'){
+		timelabel='maand';
+		var xScale=d3.time.scale()
+			.domain([0,repPeriod])   // time in ms			
+			.range([50,width]);		
+
+		var xAxis=d3.svg.axis()
+			.scale(xScale)
+			.tickFormat(customQuarterFormat)
+    		.orient("bottom");
+
+	}
+
+
+	if (reprate=='year'){
+		timelabel='Maand';
+		var xScale=d3.time.scale()
+			.domain([0,repPeriod])   // time in ms			
+			.range([50,width]);		
+
+		var xAxis=d3.svg.axis()
+			.scale(xScale)
+			.tickFormat(customYearFormat)
+    		.orient("bottom");
+
+	}
+
+	
 
 	console.log('repPeriod, timestep:',repPeriod, timeStep);
 
-    xScale.domain([0,repPeriod]);   // time in ms
-	xScale.range([50,width]); 
+
+
 
 	console.log('minmax:',varname, varindex, meta[varindex]);
 	var yScale=d3.scale.linear();
@@ -425,9 +506,6 @@ function draw_calendar_plot (timeseries) {
 	var line = d3.svg.line();
 
 
-	var xAxis=d3.svg.axis();
-    xAxis.scale(xScale)
-    	.orient("bottom");
 
 	var yAxis=d3.svg.axis();
     yAxis.scale(yScale)
@@ -467,10 +545,22 @@ function draw_calendar_plot (timeseries) {
     		.attr("transform","translate(50,0)")
 			.call(yGrid);
 
+
    canvas.append("g")
     		.attr("class","xaxis")
     		.attr("transform","translate(0,"+(height-50)+")")
     		.call(xAxis);
+
+    var extraheight=10;
+    if ((reprate=='week') || (reprate=='quarter')) {
+		canvas.selectAll(".xaxis text") 
+    			.attr("transform",function(d) {
+	             	return "translate(" + this.getBBox().height*-2 + "," + this.getBBox().height + ")rotate(-45)";
+    	     });
+    	extraheight=0;
+    	}
+
+
    canvas.append("g")
     		.attr("class","yaxis")
     		.attr("transform","translate(50,0)")
@@ -479,9 +569,9 @@ function draw_calendar_plot (timeseries) {
 /* xas / yas labels */
     canvas.append("text")
     	.attr("class", "label")
-    	.attr("y", height-10)
+    	.attr("y", height-extraheight)
     	.attr("x", width/2)
-    	.text("tijd (uur)");
+    	.text(timelabel);
 
     canvas.append("text")
     	.attr("class", "label")
@@ -540,8 +630,8 @@ function update_month () {
  console.log (this.id);
  m=this.id.split('_');	
  month=parseInt(m[1]);
- from=new Date(year,month,1); 
- to=new Date(year,month+1,1); 
+ from_date=new Date(year,month,1); 
+ to_date=new Date(year,month+1,1); 
  console.log(from,to);
 
  $('.day').removeClass('hasData');
@@ -612,12 +702,20 @@ function update_variablename_html() {
 	varname=data_names[0];
 }
 
+
 function change_reprate () {
-	
+
+	console.clear()	
+	console.log('change_reprate');
 	reprange=$(this).attr('data-reprate');
 	repPeriod=reprate_to_period[reprange];
+	if (repPeriod=='undefined') {
+		console.log('unknown reprate:',reprange);
+	}
+	reprate=reprange;
 	$('#cal_svg').remove();
-	timeseries=prep_timeseries(newdata);	
+	console.log(reprate)
+	timeseries=prep_timeseries(data);	
 	draw_calendar_plot(timeseries);
 }
 

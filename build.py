@@ -79,7 +79,7 @@ class calendar:
         maxdate=None
         for line in f.readlines():
             line=line.strip();            
-            if line[0]=='#':
+            if len(line)==0 or line[0]=='#':
                 continue
             datacols=line.split(sep)
             datacols=[datacol.strip() for datacol in datacols]
@@ -103,9 +103,10 @@ class calendar:
             dateval=dateutil.parser.parse(datestring)
             if prevdate is not None:
                 datediff=dateval-prevdate
-                if datedelta is None:
+                
+                if datedelta is None and datediff.total_seconds()>0:
                     datedelta=datediff                    
-                if datediff.total_seconds()!=0 and datediff<datedelta:
+                if datediff.total_seconds()!=0 and (datediff<datedelta) and datediff.total_seconds()>0:
                     datedelta=datediff
             prevdate=dateval
             if mindate is None:

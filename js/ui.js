@@ -1,4 +1,5 @@
 
+plot_type='pixmap';
 year=2013; //FIXME: selected year
 meta=[{label:'d0',min:0,max:0}];
 varname=var_names[0];
@@ -275,7 +276,7 @@ function prep_timeseries (data) {
     	if (d>to_date) continue;
     	 	
     	if (d>=t1) {
-    		console.log("push_data", d,t1);
+    		//console.log("push_data", d,t1);
     		timeseries.push([xdata, datarow, serie_break ]);  
     		xdata=[];   			
 			datarow=[];
@@ -427,7 +428,15 @@ function draw_days_in_calendar (timeseries) {
 
 
 
+
+
 function draw_calendar_plot (timeseries) {
+
+
+	if (plot_type=='pixmap') {
+		draw_calendar_pixmap(timeseries)
+		return;
+	}
 
 	var canvas= d3.select ('#calplot').append('svg')
 	.attr('xmlns',"http://www.w3.org/2000/svg")
@@ -770,6 +779,7 @@ function init_page () {
 	$('.repsel').on('click',change_reprate);
 	$('.varname').on('click',click_varname);
 
+	//d3.slider().axis( d3.svg.axis().orient("top").ticks(6) );
 }
 
 

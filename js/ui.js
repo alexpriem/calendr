@@ -1,5 +1,6 @@
 
 plot_type='pixmap';
+plot_type='calendar';
 year=2013; //FIXME: selected year
 meta=[{label:'d0',min:0,max:0}];
 varname=var_names[0];
@@ -345,10 +346,10 @@ function draw_cal(from,to) {
 	var year=t0.getFullYear();
 	var out='<table>\n';
 	out+='<tr>'
-	out+=' 		<th><label for="from_date">Begindatum </label> <input type="text" name="from_date" id="input_from_date" maxlength=8></th>';
+	out+=' 		<th><label id="label_from_date"  for="from_date">Begindatum </label> <input type="text" name="from_date" id="input_from_date" maxlength=12 ></th>';
 	out+='  	<th></th>';
 	out+='		<th></th>';
-	out+='		<th colspan="2"><label for="from_date ">Einddatum </label> <input type="text" name="to_date" id="input_to_date" maxlength=8></th>';
+	out+='		<th colspan="2"><label id="label_to_date" for="to_date ">Einddatum </label> <input type="text" name="to_date" id="input_to_date" maxlength=12></th>';
 	out+=' </tr>\n';
 	out+='<tr> <th></th> <td class="hspacer"> </td> <th id="yearlbl">'+year+'</th><td class="hspacer"> </td> <th></th>  </tr>\n';
 
@@ -369,13 +370,14 @@ function draw_cal(from,to) {
 		}
 
 		thisMonth=t0.getMonth();
+		thisYear=t0.getFullYear();
 		prevMonth=thisMonth;
 		while (thisMonth==prevMonth) {
 			var day=t0.getDate();
 			daynr=t0.getDay();
 			dayclass="weekday";
 			if ((daynr==5) || (daynr==6)) dayclass="weekend";		
-			out+='<td id="d_'+day+'_'+thisMonth+'" class="day '+dayclass+'">'+day+'</td>';			
+			out+='<td id="d_'+day+'_'+thisMonth+'" data-dag='+day+' data-month='+thisMonth+' data-year='+year+' class="day '+dayclass+'">'+day+'</td>';			
 			if (daynr==6) {
 				out+='</tr>\n<tr>'
 			}
@@ -407,20 +409,58 @@ function draw_cal(from,to) {
 	out+='</tr>\n</table>\n';
 	$('#calendar').html(out)
 	console.log(t0);
+
+	set_widget_date('input_from_date',from_date);
+	set_widget_date('input_to_date',to_date);
+	init_date_widget('from_date');
+	init_date_widget('to_date');
+	$('.day').on('click',change_from_to_date);
+}
+ 
+function change_from_to_date(evt) {
+
+ console.clear();
+ var day=evt.target.getAttribute('data-dag');
+ var month=evt.target.getAttribute('data-month');
+ var year=evt.target.getAttribute('data-year');
+
+ d=new Date(year,month,day);
+ console.log(d,year,month,day);
+ var done=false;
+ console.log(from_date,to_date,d);
+ if ((d<from_date) || (date_selection_type=='label_from_date')) {
+ 	from_date=d;
+  	console.log('setfrom');
+ } 
+ if ((d>to_date) || (date_selection_type=='label_to_date')) {
+ 	to_date=d;
+  	console.log('setto');
+ }
+ 
+ set_widget_date('input_from_date',from_date);
+ set_widget_date('input_to_date',to_date);
+ // $('.day').on('click',update_plot);
+ draw_days_in_calendar(from_date, to_date);
 }
 
+function draw_days_in_calendar (startdate, enddate) {
 
-function draw_days_in_calendar (timeseries) {
 
-	console.log('drawdays:',from_date,to_date);
+	console.log('drawdays:',startdate,enddate);
 	//d=new Date(from.getFullYear(),from.getMonth(), from.getDate());
-	d=new Date(from_date.getFullYear(),from_date.getMonth(), from_date.getDate());
+	$('.day').removeClass('hasData');
+	$('.day').removeClass('selectedData');
+	d=new Date(min_date);
 	j=0;
-	while (d<to_date) {			
+	while (d<max_date) {			
 		var day = d.getDate();
 		var month = d.getMonth();		
-		var year = d.getFullYear();
-		$('#d_'+day+'_'+month).addClass("hasData");		
+		var year = d.getFullYear();	
+		if ((d>=startdate) && (d<=enddate)) {
+			$('#d_'+day+'_'+month).addClass('selectedData');
+		} else {
+			$('#d_'+day+'_'+month).addClass('hasData');
+		}
 		d.setDate(day+1);
 		//console.log(day,month,year)
 	}
@@ -652,9 +692,9 @@ function update_selectie () {
 	selected_keyid=key2id[selected_keylabel];
 	console.log ('selectie=',selected_keyid);
 
-	draw_days_in_calendar (timeseries);
+	draw_days_in_calendar (from_date, to_date);
 	$('#cal_svg').remove();
-	timeseries=prep_timeseries(newdata);	
+	timeseries=prep_timeseries(data);	
 	draw_calendar_plot(timeseries);
 }
 
@@ -665,14 +705,14 @@ function update_month () {
  m=this.id.split('_');	
  month=parseInt(m[1]);
  from_date=new Date(year,month,1); 
- to_date=new Date(year,month+1,1); 
- console.log(from,to);
+ to_date=new Date(year,month+1,0); 
+ console.log(from_date,to_date);
 
- $('.day').removeClass('hasData');
- draw_days_in_calendar (timeseries);
+ $('.day').removeClass('selectedData');
+ draw_days_in_calendar (from_date, to_date);
 
  $('#cal_svg').remove();
- timeseries=prep_timeseries(newdata);	
+ timeseries=prep_timeseries(data);	
  draw_calendar_plot(timeseries);
 }
 
@@ -695,11 +735,11 @@ function update_plot () {
  }
  console.log('from,to:',from_date,to_date);
 
- $('.day').removeClass('hasData');
- draw_days_in_calendar (timeseries);
+ $('.day').removeClass('selectedData');
+ draw_days_in_calendar (from_date, to_date);
 
  $('#cal_svg').remove();
- timeseries=prep_timeseries(newdata);	
+ timeseries=prep_timeseries(data);	
  draw_calendar_plot(timeseries);
 }
 
@@ -763,17 +803,17 @@ function init_page () {
 	console.log('init_page:',from_date);
 	update_variablename_html();
 
-
 	data_timestep=nibble_data(data);
 	timeseries=prep_timeseries(data);
 	console.log('upd:',from_date,to_date);
 	draw_cal (from_date, to_date);
 	console.log('upd2:',from_date,to_date);
 
-	draw_days_in_calendar (timeseries);
+	
+	draw_days_in_calendar (from_date, to_date);
 	draw_calendar_plot(timeseries);
 
-	$('.day').on('click',update_plot);
+	
 	$('.monthheader').on('click',update_month);
 	$('#read').on('click',read_data);
 	$('.repsel').on('click',change_reprate);

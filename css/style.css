@@ -19,8 +19,13 @@ padding-top: 25px;
 padding-left:50px;
 }
 
-.hasData {
+.selectedData {
 background-color: #8a8a8a;
+}
+
+
+.hasData {
+background-color: #cacaca;
 }
 
 
@@ -77,11 +82,11 @@ background-color: #8a0000;
 }
 
 #input_to_date {
-	width:65px;
+	width:80px;
 }
 
 #input_from_date {
-	width:65px;
+	width:80px;
 }
 
 
@@ -97,4 +102,35 @@ background-color: #8a0000;
 	list-style-type:none;
 }
 
+
+
+.xaxis line,
+.xaxis path,
+.yaxis line,
+.yaxis path
+{
+	fill:none;
+	stroke: black;
+	shape-rendering: crispEdges;
 }
+
+.grid line {
+	fill:none;
+	stroke: #ccc;
+	shape-rendering: crispEdges;	
+}
+
+
+.yaxis text,
+.xaxis text
+{
+	font-family:sans-serif;
+	font-size: 11px;
+}
+
+
+
+#pixmap_canvas,
+#pixmap_svg {
+    position: absolute;
+  }

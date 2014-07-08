@@ -255,22 +255,29 @@ function prep_timeseries (data) {
 	datarow=[];
 	serie_break=[];
 	nrdatasets=datacols.length;
+	aggval=[];
 	for (i=0; i<nrdatasets; i++){
 		datarow[i]=[];
 		serie_break[i]=[];
+		aggval.push(0);
   		}
 
 
+  	aggtimestep=5*60*1000; // 5 minutes
 	var d0=null;
 	var d1=null;
+	var prev_aggdate=0;
     console.log('start loop');
+
+    
     for (j=0; j<data.length; j++) {      	
     	row=data[j];    	
     /*	if (has_key) {
     		if (row[keycol]!=selected_keyid) continue;   // wilt ook meerdere selecties doen
     	} 
     */
-    	d=row[datecol];   
+    	d=row[datecol];  
+
     	//console.log(j,d,t1,t0);
     	if (d<from_date) continue;	
     	if (d>to_date) continue;
@@ -281,34 +288,47 @@ function prep_timeseries (data) {
     		xdata=[];   			
 			datarow=[];
 			serie_break=[];
+			aggval=[];
     		for (i=0; i<nrdatasets; i++){
 				datarow[i]=[];
 				serie_break[i]=[];
+				aggval.push(0);
   			}    		
     		t0=t1;
     		t1=new Date(t0.valueOf() + repPeriod);  
     	}
 
     	d0=d;
+    	aggdate=d- d % aggtimestep; 
+    	if (prev_aggdate==null) {prev_aggdate=aggdate;}
+
     	var series_break=false;
     	if (d1!=null) {
     		if ((d1-d0)>data_timestep) series_break=true;  
     		}
 
 
-    	if (reprate=='week') {
-    		xdata.push(d-t0+d3_weekoffsethack+day_interval*timestep);
-    	} else {
-    		xdata.push(d-t0);
-    	}
     	for (i=0; i<nrdatasets; i++){
     		col=datacols[i];
-			val=row[col];    	
-    		if (val>meta[i].max) { meta[i].max=val;}
-    		if (val<meta[i].min) { meta[i].min=val;}    		
-    		datarow[i].push(val);    		
-			serie_break[i].push(series_break || val!=null);
-    	}
+			aggval[i]+=row[col];
+		}		
+    	if (prev_aggdate!=aggdate){
+    		prev_aggdate=aggdate;
+
+    		if (reprate=='week') {
+	    		xdata.push(d-t0+d3_weekoffsethack+day_interval*timestep);
+    		} else {
+    			xdata.push(d-t0);
+    		}
+    		for (i=0; i<nrdatasets; i++){
+    			aggv=aggval[i];
+    			if (aggv>meta[i].max) { meta[i].max=aggv;}
+    			if (aggv<meta[i].min) { meta[i].min=aggv;} 
+    			datarow[i].push(aggv);    		    				    		
+    			serie_break[i].push(series_break || aggval!=null);
+    			aggval[i]=null;    		
+    		}
+    	}			    	
     	d1=d0;
 
     }

@@ -1,6 +1,6 @@
 
-//plot_type='pixmap';
-plot_type='calendar';
+plot_type='pixmap';
+//plot_type='calendar';
 year=2013; //FIXME: selected year
 meta=[{label:'d0',min:0,max:0}];
 varname=var_names[0];
@@ -471,11 +471,16 @@ function draw_days_in_calendar (startdate, enddate) {
 
 function draw_calendar_plot (timeseries) {
 
+	$('#pixmap_canvas').remove(	);
+	$('#pixmap_svg').remove();
+	$('#cal_svg').remove();
 
 	if (plot_type=='pixmap') {
 		draw_calendar_pixmap(timeseries)
 		return;
 	}
+
+
 
 	var canvas= d3.select ('#calplot').append('svg')
 	.attr('xmlns',"http://www.w3.org/2000/svg")
@@ -775,6 +780,16 @@ function update_variablename_html() {
 	varname=data_names[0];
 }
 
+function toggle_plottype() {
+	$('#toggle_plot').text(plot_type);
+	if (plot_type=='pixmap') {
+		plot_type='calendar';
+
+	} else {
+		plot_type='pixmap';
+	}
+	draw_calendar_plot(timeseries);
+}
 
 function change_reprate () {
 
@@ -817,7 +832,7 @@ function init_page () {
 	$('#read').on('click',read_data);
 	$('.repsel').on('click',change_reprate);
 	$('.varname').on('click',click_varname);
-
+	$('#toggle_plot').on('click', toggle_plottype);
 	//d3.slider().axis( d3.svg.axis().orient("top").ticks(6) );
 }
 

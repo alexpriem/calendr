@@ -9,13 +9,11 @@ var offsetx_hist=15;
 
 function draw_calendar_pixmap (timeseries) {
 
-	$('#pixmap_canvas').remove();
-	$('#pixmap_svg').remove();
 
 	console.log('draw_calendar_pixmap:',timeseries.length)
-	steps=24;
+	steps=24*60*60*1000/data_timestep;
 	var pixelsize=Math.floor(width/(timeseries[0][0].length*3)); // met minumum van 5?
-	if ((pixelsize<5) || (!isFinite(pixelsize))) {pixelsize=5;}
+	if ((pixelsize<2) || (!isFinite(pixelsize))) {pixelsize=2;}
 	console.log('pixelsize:', pixelsize);
 	var height=timeseries.length*pixelsize+offset_pixmapx;
 	canvas = document.createElement('canvas');     
@@ -47,7 +45,9 @@ function draw_calendar_pixmap (timeseries) {
 	var varindex=data_names.indexOf(varname);
 	var maxy=meta[varindex].max;
 	var miny=meta[varindex].min;
+	var maxy=20;
 	var dy=maxy-miny;
+
 
 	 var xScale=d3.scale.linear()
 				.range([0,steps*pixelsize])
@@ -90,9 +90,9 @@ function draw_calendar_pixmap (timeseries) {
 		xdata=timeserie[0];
 		ydata=timeserie[1][varnr];    
 		series_break=timeserie[2][varnr];
-
+		console.log('i,len',i,xdata.length);
 		for (j=0; j<xdata.length; j++) {
-			x=((xdata[j]/hour_interval)+1)*pixelsize+offset_pixmapx;
+			x=((xdata[j]/data_timestep)+1)*pixelsize+offset_pixmapx;
 			
 			y=i*pixelsize+offset_pixmapy;
 			color=(ydata[j]-miny)/dy;

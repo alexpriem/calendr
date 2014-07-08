@@ -1,12 +1,13 @@
 
-plot_type='pixmap';
+//plot_type='pixmap';
 plot_type='calendar';
 year=2013; //FIXME: selected year
 meta=[{label:'d0',min:0,max:0}];
 varname=var_names[0];
-datecol=1;
+
+datecol=var_types.indexOf('date');
 keycol=0;
-datacols=[2]; // FIXME:datacols!
+datacols=data_index; // FIXME:datacols!
 //var beginRange=new Date(2001,1,1);
 //var endRange=new Date(2001,1,1);
 
@@ -127,7 +128,7 @@ function prep_data (data, dateformat) {
 function nibble_data (data) {
 
 	var len=100;
-	if (data.length>len){
+	if (data.length<len){
 		len=data.length;
 	}
 
@@ -138,7 +139,7 @@ function nibble_data (data) {
 		d1=row[datecol];
 		delta=d1-d0;
 		
-		if (((mindelta==null) || (delta<mindelta)) && (delta!=0)) {
+		if (((mindelta==null) || (delta<mindelta)) && (delta>0)) {
 			mindelta=delta;
 		}
 		d0=d1;
@@ -153,9 +154,7 @@ function prep_timeseries (data) {
 	// tijdelijk spul
 	var i,j;
 	var keycol=0;
-	var datecol=1;
-	var datacol=2;
-
+	
 	
 	var prevDate=new Date();
 	var timeseries=[];

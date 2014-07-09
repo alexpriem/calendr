@@ -11,14 +11,14 @@ function draw_calendar_pixmap (timeseries) {
 
 
 	console.log('draw_calendar_pixmap:',timeseries.length)
-	steps=24*60*60*1000/data_timestep;
+	nr_pixels=24*60*60*1000/(data_timestep*aggtimestep);
 	var pixelsize=Math.floor(width/(timeseries[0][0].length*3)); // met minumum van 5?
 	if ((pixelsize<2) || (!isFinite(pixelsize))) {pixelsize=2;}
 	console.log('pixelsize:', pixelsize);
 	var height=timeseries.length*pixelsize+offset_pixmapx;
 	canvas = document.createElement('canvas');     
     canvas.id     = "pixmap_canvas";
-    canvas.width  = steps*pixelsize;
+    canvas.width  = nr_pixels*pixelsize;
     canvas.height = height+offset_pixmapy;
     canvas.style.zIndex   = 8;
     //canvas.style.position = "absolute";        
@@ -50,7 +50,7 @@ function draw_calendar_pixmap (timeseries) {
 
 
 	 var xScale=d3.scale.linear()
-				.range([0,steps*pixelsize])
+				.range([0,nr_pixels*pixelsize])
   				.domain([0,24]);
  	 var yScale=d3.scale.linear()
 				.range([0,height-offset_pixmapy])

@@ -26,6 +26,8 @@ week_interval=7*24*3600*1000;
 day_interval=24*3600*1000;
 hour_interval=3600*1000;
 
+aggtimestep=5;
+
 
 // tijdelijke oplossing; echte oplossing moet uitgaan van echte maanden, d.i. maatwerk.
 // dito kwartaal/jaren.
@@ -263,7 +265,7 @@ function prep_timeseries (data) {
   		}
 
 
-  	aggtimestep=5*60*1000; // 5 minutes
+  	agg_timestep=aggtimestep*60*1000; // 5 minutes
 	var d0=null;
 	var d1=null;
 	var prev_aggdate=0;
@@ -299,7 +301,7 @@ function prep_timeseries (data) {
     	}
 
     	d0=d;
-    	aggdate=d- d % aggtimestep; 
+    	aggdate=d- d % agg_timestep; 
     	if (prev_aggdate==null) {prev_aggdate=aggdate;}
 
     	var series_break=false;
@@ -820,9 +822,18 @@ function change_reprate () {
 	if (repPeriod=='undefined') {
 		console.log('unknown reprate:',reprange);
 	}
-	reprate=reprange;
-	$('#cal_svg').remove();
+	reprate=reprange;	
 	console.log(reprate)
+	timeseries=prep_timeseries(data);	
+	draw_calendar_plot(timeseries);
+}
+
+function change_agg () {
+
+	console.clear()	
+	console.log('change_agg');
+	aggtimestep=$(this).attr('data-agg');	
+	
 	timeseries=prep_timeseries(data);	
 	draw_calendar_plot(timeseries);
 }
@@ -851,6 +862,7 @@ function init_page () {
 	$('.monthheader').on('click',update_month);
 	$('#read').on('click',read_data);
 	$('.repsel').on('click',change_reprate);
+	$('.aggsel').on('click',change_agg);
 	$('.varname').on('click',click_varname);
 	$('#toggle_plot').on('click', toggle_plottype);
 	//d3.slider().axis( d3.svg.axis().orient("top").ticks(6) );

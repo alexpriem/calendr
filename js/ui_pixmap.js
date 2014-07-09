@@ -84,16 +84,16 @@ function draw_calendar_pixmap (timeseries) {
 
 
 	var varnr=0;
-	var aggstep=5;  //datetimestep/aggtimestep
+//	var aggtimestep=5;  //datetimestep/aggtimestep
 	for (i=0; i<timeseries.length; i++) {		
 		
 		timeserie=timeseries[i];
 		xdata=timeserie[0];
 		ydata=timeserie[1][varnr];    
 		series_break=timeserie[2][varnr];
-		console.log('i,len',i,xdata.length);
+		
 		for (j=0; j<xdata.length; j++) {
-			x=((xdata[j]/(data_timestep*aggstep))+1)*pixelsize+offset_pixmapx;
+			x=((xdata[j]/(data_timestep*aggtimestep))+1)*pixelsize+offset_pixmapx;
 			
 			y=i*pixelsize+offset_pixmapy;
 			color=(ydata[j]-miny)/dy;

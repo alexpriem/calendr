@@ -77,7 +77,7 @@ class calendar:
         prevdate=None
         mindate=None
         maxdate=None
-        for line in f.readlines():
+        for line in f:
             line=line.strip();            
             if len(line)==0 or line[0]=='#':
                 continue
@@ -137,7 +137,7 @@ class calendar:
             id2keyjs='id2key={'
             key2idjs='key2id={'
             keylabeljs='keylabel=['
-            for line in f.readlines():
+            for line in f:
                 line=line.split(',')
                 keylabel=line[1].strip()
                 keyid=line[0].strip()

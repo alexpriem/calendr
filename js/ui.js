@@ -838,12 +838,48 @@ function change_agg () {
 	draw_calendar_plot(timeseries);
 }
 
+function set_gradient (opties) {
+ 
+    var defaultsettings={
+        colormapname: opties.colormap,
+        gradient_min: opties.gradmin,
+        gradient_center: opties.gradcenter,
+        gradient_max: opties.gradmax,                
+        gradient_steps: opties.gradsteps,
+        gradient_bimodal: opties.gradient_bimodal,
+        log_min: opties.log_min,
+        transform: opties.transform,
+        gradient_invert: opties.gradient_invert,
+        show_size: 'true',
+        xpixels: opties.x_steps,
+        ypixels: opties.y_steps,
+        controltype: opties.controltype
+    };
+ 
+    topnode=document.getElementById('cg_a');
+     for (var keyword in defaultsettings) {
+      if (defaultsettings.hasOwnProperty(keyword)) {                      
+            topnode.setAttribute(keyword, defaultsettings[keyword]);                      
+      }
+  }
+}
+
+
+
 
 function init_page () {
 
 
+
+
+
 //	$('#keyentry').typeahead({source:keylabel});
 	$('#keyentry').on('change',update_selectie);
+
+
+	window_opties=opties[0];
+    set_gradient(window_opties);
+	init_gradients(); 
 
 	console.log('init_page:',from_date);
 	update_variablename_html();

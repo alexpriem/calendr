@@ -4,11 +4,15 @@
 <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
 <link rel="stylesheet" href="css/style.css" type="text/css" />
 <script src="js-lib/d3.min.js"></script>
-<script src="js-lib/jquery-2.0.3.min.js"></script>    
+<script src="js-lib/jquery-2.1.1.min.js"></script>    
 <script src="js-lib/dust-full-1.2.3.min.js"></script>
 <script src="js-lib/bootstrap.min.js"></script>    
 <script src="js-lib/d3.slider.js"></script>  
 <script src="js-lib/jdate.js"> </script>  
+
+  <script src="js-lib/chroma.min.js"  type="text/javascript"> </script> 
+  <script src="js-lib/handlebars-v2.0.0.js"></script>    
+  <script src="js-lib/colormapr.js"> </script>  
 
 <script src="js/data.js"></script>
 </head>
@@ -17,10 +21,68 @@
 <body>
 
 
+  <script id="entry-template-flat" type="text/x-handlebars-template">
+ <ul id="sel_colormap_{{widget_id}}" class="selbox">
+    <li class="sel_heading"> Colormaps: </li>  
+    <select id="colormap_select_{{widget_id}}" data-widget="{{widget_id}}">
+        {{#colormaps}}
+        <option value="{{name}}" data-widget="{{widget_id}}">{{name}}</option>
+        {{/colormaps}}
+    </select>
+    </ul>
+
+    <ul id="sel_transform_{{widget_id}}" class="selbox">
+      <li class="sel_heading"> Transform: </li>
+      <select id="transform_select_{{widget_id}}" data-widget="{{widget_id}}">          
+          <option value="linear" data-widget="{{widget_id}}">linear</option>
+          <option value="sqrt" data-widget="{{widget_id}}">sqrt</option>
+          <option value="log" data-widget="{{widget_id}}">log</option>
+      </select>
+    </ul>
+
+    {{#if show_size}}
+        <ul id="sel_size_{{widget_id}}" class="selbox" >
+        <li class="sel_heading"> Sizes: </li>
+        <select id="size_select_{{widget_id}}" data-widget="{{widget_id}}">
+        {{#sizes}}
+        <option class="sizename" value="{{size}}" data-widget="{{widget_id}}"> {{size_x_size}} </option>
+        {{/sizes}}
+        </select>
+        </ul>
+    {{/if}}
+
+    <ul id="sel_swap_{{widget_id}}" class="selbox">
+      <li class="sel_heading"> Gradient:</li>
+      <li class="swapname swapname_{{widget_id}}" id="invert_{{widget_id}}" data-widget="{{widget_id}}"> invert gradient</li>
+      <li class="swapname swapname_{{widget_id}}" id="bimodal_{{widget_id}}" data-widget="{{widget_id}}"> Bimodal gradient</li>
+      <li class="swapname swapname_{{widget_id}}" id="header_min_{{widget_id}}" > 
+            Mininum: 
+              <input type="text" id="min_{{widget_id}}" data-widget="{{widget_id}}" name="gradient_min" class="gradient_input" value="{{min}}" maxlength=5  >  
+            </li>
+      <li class="swapname swapname_{{widget_id}}" id="header_center_{{widget_id}}" > 
+            Center: 
+              <input type="text" id="center_{{widget_id}}" data-widget="{{widget_id}}" name="gradient_center" class="gradient_input" value="{{center}}" maxlength=5>
+            </li>
+      <li class="swapname swapname_{{widget_id}}" id="header_max_{{widget_id}}"  > 
+            Maximum:  
+              <input type="text" id="max_{{widget_id}}" data-widget="{{widget_id}}" name="gradient_max" class="gradient_input" value="{{max}}" maxlength=5> 
+            </li>
+      <li class="swapname swapname_{{widget_id}}" id="header_steps_{{widget_id}}" > 
+            Steps:  
+              <input type="text" id="steps_{{widget_id}}" data-widget="{{widget_id}}" name="gradient_steps" class="gradient_input" value="{{steps}}" maxlength=5> 
+            </li>
+    </ul>
+  </script>
+
+
+
+
+
 <table>
  <tr>
  	<td id="calendar"> </td>
   	<td id="calplot">  </td> 
+  	<td><div class="colormap-gradient" id="cg_a" data-controls="cc_a"> </div> </td>  
  	<td id="controls"> 
  				
  		<div id="txt"> </div>
@@ -28,6 +90,10 @@
  		
  		<a href="#" id="read" value="data/KNMI_hvh_2009.txt"> read data </a>
  		<label for="keyentry"> Selectie:</label><input type="text" id="keyentry"> </input>
+
+
+ 		 <div class="colormap-controls" id="cc_a" data-gradient="cg_a"> </div>
+
 		<ul id="repsel_list" class="repsel_list">
  		<li> <h5>Aggegraat: </h5></li>
  		<li><a href="#" id="min2" class="aggsel" data-agg="1" > 1 min </a></li>
